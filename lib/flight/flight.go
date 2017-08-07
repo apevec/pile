@@ -16,11 +16,13 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
+	"gopkg.in/ldap.v2"
 )
 
 var (
 	configInfo env.Info
 	dbInfo     *sqlx.DB
+	ldapInfo   *ldap.Conn
 
 	mutex sync.RWMutex
 )
@@ -41,6 +43,13 @@ func StoreDB(db *sqlx.DB) {
 	mutex.Unlock()
 }
 
+// stores the ldap connection
+func StoreLDAP(ldapc *ldap.Conn) {
+	mutex.Lock()
+	ldapInfo = ldapc
+	mutex.Unlock()
+}
+
 // Info structures the application settings.
 type Info struct {
 	Config env.Info
@@ -50,6 +59,7 @@ type Info struct {
 	R      *http.Request
 	View   view.Info
 	DB     *sqlx.DB
+	LDAP   *ldap.Conn
 }
 
 // Context returns the application settings.
@@ -74,6 +84,7 @@ func Context(w http.ResponseWriter, r *http.Request) Info {
 		R:      r,
 		View:   configInfo.View,
 		DB:     dbInfo,
+		LDAP:   ldapInfo,
 	}
 	mutex.RUnlock()
 
@@ -85,6 +96,7 @@ func Reset() {
 	mutex.Lock()
 	configInfo = env.Info{}
 	dbInfo = &sqlx.DB{}
+	ldapInfo = &ldap.Conn{}
 	mutex.Unlock()
 }
 

@@ -30,6 +30,9 @@ func RegisterServices(config *env.Info) {
 	// Connect to the MySQL database
 	mysqlDB, _ := config.MySQL.Connect(true)
 
+	// Connect to LDAP
+	ldapClient, _ := config.LDAP.Dial()
+
 	// Load the controller routes
 	controller.LoadRoutes()
 
@@ -56,6 +59,9 @@ func RegisterServices(config *env.Info) {
 
 	// Store the variables in flight
 	flight.StoreConfig(*config)
+
+	// Store LDAP connection in flight
+	flight.StoreLDAP(ldapClient)
 
 	// Store the database connection in flight
 	flight.StoreDB(mysqlDB)

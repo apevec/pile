@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/arapov/pile/lib/flight"
+	"github.com/arapov/pile/model/ldap"
 
 	"github.com/blue-jay/core/router"
 )
@@ -18,7 +19,7 @@ func Load() {
 func Index(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 
-	result, err := c.Config.LDAP.Search()
+	result, err := ldap.Get(c.LDAP)
 	if err != nil {
 		c.FlashError(err)
 		return

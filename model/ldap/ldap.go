@@ -2,31 +2,40 @@
 package ldap
 
 import (
-	"fmt"
 	"log"
 
-	"github.com/arapov/pile/lib/flight"
+	"gopkg.in/ldap.v2"
 )
 
-// Item defines the model.
 type Item struct {
+	dn string
+	cn string
 }
 
-// Connection is an interface for making queries.
 type Connection interface {
-	//	Exec(query string, args ...interface{}) (sql.Result, error)
-	//	Get(dest interface{}, query string, args ...interface{}) error
-	//	Select(dest interface{}, query string, args ...interface{}) error
+	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
 }
 
-// ByID gets an item by ID.
-func ByID(db Connection, ID string, userID string) (Item, error) {
-	var result Item
-	var err error
+func Get(ldapc Connection) ([]Item, error) {
+	var result []Item
 
-	log.Println("Implementing")
+	searchRequest := ldap.NewSearchRequest(
+		"ou=users,dc=redhat,dc=com", // The base dn to search
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		"(&(objectClass=organizationalPerson))", // The filter to apply
+		[]string{"dn", "cn"},                    // A list attributes to retrieve
+		nil,
+	)
 
-	result := "item"
+	sr, err := ldapc.Search(searchRequest)
+	if err != nil {
+		// TODO: Must not .Fatal
+		log.Fatal(err)
+	}
+
+	for _, entry := range sr.Entries {
+		result = append(result, Item{entry.DN, entry.GetAttributeValue("cn")})
+	}
 
 	return result, err
 }
