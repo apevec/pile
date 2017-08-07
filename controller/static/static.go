@@ -6,8 +6,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/blue-jay/blueprint/controller/status"
-	"github.com/blue-jay/blueprint/lib/flight"
+	"github.com/arapov/pile/controller/status"
+	"github.com/arapov/pile/lib/flight"
 
 	"github.com/blue-jay/core/router"
 )
