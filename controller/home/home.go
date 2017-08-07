@@ -18,10 +18,17 @@ func Load() {
 func Index(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 
+	result, err := c.Config.LDAP.Search()
+	if err != nil {
+		c.FlashError(err)
+		return
+	}
+
 	v := c.View.New("home/index")
 	if c.Sess.Values["id"] != nil {
 		v.Vars["first_name"] = c.Sess.Values["first_name"]
 	}
+	v.Vars["result"] = result
 
 	v.Render(w, r)
 }

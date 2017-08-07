@@ -4,6 +4,8 @@ package env
 import (
 	"encoding/json"
 
+	"github.com/arapov/pile/lib/ldap"
+
 	"github.com/blue-jay/core/asset"
 	"github.com/blue-jay/core/email"
 	"github.com/blue-jay/core/form"
@@ -26,6 +28,7 @@ type Info struct {
 	Form       form.Info     `json:"Form"`
 	Generation generate.Info `json:"Generation"`
 	MySQL      mysql.Info    `json:"MySQL"`
+	LDAP       ldap.Info     `json:"LDAP"`
 	Server     server.Info   `json:"Server"`
 	Session    session.Info  `json:"Session"`
 	Template   view.Template `json:"Template"`
