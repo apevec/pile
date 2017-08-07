@@ -8,6 +8,7 @@
 .DS_Store
 thumbs.db
 !/filestorage/README.md
+*swp
 
 # Blue Jay Files
 env.json
