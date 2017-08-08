@@ -75,6 +75,20 @@ gulp.task('bootstrap', function() {
 		.pipe(gulp.dest(folderAsset + '/static/js/'));
 });
 
+// Patterbfly Task
+gulp.task('patternfly', function() {
+	gulp.src('node_modules/patternfly/dist/css/patternfly-additions.min.*')
+		.pipe(gulp.dest(folderAsset + '/static/css/'));
+	gulp.src('node_modules/patternfly/dist/css/patternfly.min.*')
+		.pipe(gulp.dest(folderAsset + '/static/css/'));
+	gulp.src('node_modules/patternfly/dist/fonts/*')
+		.pipe(gulp.dest(folderAsset + '/static/fonts/'));
+	gulp.src('node_modules/patternfly/dist/img/*')
+		.pipe(gulp.dest(folderAsset + '/static/img/'));
+	return gulp.src('node_modules/patternfly/dist/js/patternfly*.min.js')
+		.pipe(gulp.dest(folderAsset + '/static/js/'));
+});
+
 // Underscore Task
 gulp.task('underscore', function() {
 	return gulp.src('node_modules/underscore/underscore-min.*')
@@ -248,7 +262,7 @@ gulp.task('watch', ['server:build'], function() {
 });
 
 // Init - every task
-gulp.task('init', ['sass', 'javascript', 'jquery', 'bootstrap', 'underscore', 'favicon', 'server:build']);
+gulp.task('init', ['sass', 'javascript', 'jquery', 'bootstrap', 'patternfly', 'underscore', 'favicon', 'server:build']);
 
 // Default - only run the tasks that change often
 gulp.task('default', ['sass', 'javascript', 'server:build']);
