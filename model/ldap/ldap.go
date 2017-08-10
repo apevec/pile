@@ -50,6 +50,7 @@ func GetAll(ldapc Connection) (Items, []string, error) {
 	var dfgs []string
 
 	// TODO: Make it dedup, sane and readable
+	// TODO: accomodate DFG->Squad relation
 
 	// DFGs:
 	searchRequest := ldap.NewSearchRequest(
