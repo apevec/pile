@@ -19,9 +19,9 @@
 			</tr>
 		</thead>
 		<tbody>
-		{{range $foo := index $.people}}
-			{{range $foo.Dfg}}
-				{{if eq . $dfg}}
+		{{range $foo := index $.people -}}
+			{{range $foo.Dfg -}}
+				{{if eq . $dfg -}}
 			<tr>
 				<td>{{$foo.Cn}}</td>
 				<td>{{$foo.Role}}</td>
@@ -30,9 +30,9 @@
 				<td>{{$foo.Location}}</td>
 				<td>{{$foo.Title}}</td>
 			</tr>
-				{{end}}
-			{{end}}
-		{{end}}
+				{{- end}}
+			{{- end}}
+		{{- end}}
 		</tbody>
 	</table>
 	{{end}}
