@@ -79,7 +79,7 @@ func GetAll(ldapc Connection) (Items, []string, error) {
 	searchRequest = ldap.NewSearchRequest(
 		"ou=adhoc,ou=managedGroups,dc=redhat,dc=com",
 		ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
-		"(&(objectClass=rhatGroup)(|(cn=rhos-ua)(cn=rhos-pm)(cn=rhos-tc)(cn=rhos-stewards-em)(cn=rhos-stewards-qe)))",
+		"(&(objectClass=rhatGroup)(|(cn=rhos-ua)(cn=rhos-pm)(cn=rhos-tc)(cn=rhos-stewards-em)(cn=rhos-stewards-qe)(cn=rhos-squad-lead)))",
 		[]string{"cn", "memberUid"},
 		nil,
 	)
