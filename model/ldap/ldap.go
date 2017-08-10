@@ -14,11 +14,12 @@ import (
 */
 
 type Item struct {
-	Mail  string
-	Title string
-	Cn    string
-	Dfg   []string
-	Role  []string
+	Mail   string
+	Title  string
+	Cn     string
+	Mobile string
+	Dfg    []string
+	Role   []string
 }
 
 type Items map[string]*Item
@@ -109,7 +110,7 @@ func GetAll(ldapc Connection) (Items, []string, error) {
 		"ou=users,dc=redhat,dc=com",
 		ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
 		filter, // The filter to apply
-		[]string{"uid", "mail", "title", "cn"},
+		[]string{"uid", "mail", "title", "cn", "mobile"},
 		nil,
 	)
 
@@ -124,6 +125,7 @@ func GetAll(ldapc Connection) (Items, []string, error) {
 		items[uid].Mail = entry.GetAttributeValue("mail")
 		items[uid].Title = entry.GetAttributeValue("title")
 		items[uid].Cn = entry.GetAttributeValue("cn")
+		items[uid].Mobile = entry.GetAttributeValue("mobile")
 	}
 
 	/*

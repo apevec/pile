@@ -1,13 +1,20 @@
 {{define "title"}}DFG list (Drafting){{end}}
 {{define "head"}}{{end}}
 {{define "content"}}
-	<p><h2>Render DFG, members and their roles from corporate LDAP</h2></p>
+	<p><h2>Render DFGs, members and details from corporate LDAP</h2></p>
 
 	{{range $dfg := index $.dfgs}}
 	<table class="table table-striped table-bordered">
 		<thead>
 			<tr>
-				<th colspan="4">{{$dfg}}</th>
+				<th colspan="5">{{$dfg}}</th>
+			</tr>
+			<tr>
+				<th>Name</th>
+				<th>Role</th>
+				<th>eMail</th>
+				<th>Mobile</th>
+				<th>Title</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -18,6 +25,7 @@
 				<td>{{$foo.Cn}}</td>
 				<td>{{$foo.Role}}</td>
 				<td>{{$foo.Mail}}</td>
+				<td>{{$foo.Mobile}}</td>
 				<td>{{$foo.Title}}</td>
 			</tr>
 				{{end}}
