@@ -14,11 +14,11 @@ import (
 */
 
 type Item struct {
-	mail  string
-	title string
+	Mail  string
+	Title string
 	Cn    string
-	dfg   []string
-	role  []string
+	Dfg   []string
+	Role  []string
 }
 
 type Items map[string]*Item
@@ -27,8 +27,25 @@ type Connection interface {
 	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
 }
 
-func GetAll(ldapc Connection) (Items, error) {
+func removeDuplicatesUnordered(elements []string) []string {
+	encountered := map[string]bool{}
+
+	// Create a map of all unique elements.
+	for v := range elements {
+		encountered[elements[v]] = true
+	}
+
+	// Place all keys from the map into a slice.
+	result := []string{}
+	for key, _ := range encountered {
+		result = append(result, key)
+	}
+	return result
+}
+
+func GetAll(ldapc Connection) (Items, []string, error) {
 	items := make(Items)
+	var dfgs []string
 
 	// TODO: Make it dedup, sane and readable
 
@@ -51,9 +68,11 @@ func GetAll(ldapc Connection) (Items, error) {
 			if _, ok := items[member]; !ok {
 				items[member] = &Item{}
 			}
-			items[member].dfg = append(items[member].dfg, entry.GetAttributeValue("cn"))
+			items[member].Dfg = append(items[member].Dfg, entry.GetAttributeValue("cn"))
+			dfgs = append(dfgs, entry.GetAttributeValue("cn"))
 		}
 	}
+	dfgs = removeDuplicatesUnordered(dfgs)
 
 	// Roles:
 	searchRequest = ldap.NewSearchRequest(
@@ -74,7 +93,7 @@ func GetAll(ldapc Connection) (Items, error) {
 			if _, ok := items[member]; !ok {
 				items[member] = &Item{}
 			}
-			items[member].role = append(items[member].role, entry.GetAttributeValue("cn"))
+			items[member].Role = append(items[member].Role, entry.GetAttributeValue("cn"))
 		}
 	}
 
@@ -102,8 +121,8 @@ func GetAll(ldapc Connection) (Items, error) {
 	var uid string
 	for _, entry := range sr.Entries {
 		uid = entry.GetAttributeValue("uid")
-		items[uid].mail = entry.GetAttributeValue("mail")
-		items[uid].title = entry.GetAttributeValue("title")
+		items[uid].Mail = entry.GetAttributeValue("mail")
+		items[uid].Title = entry.GetAttributeValue("title")
 		items[uid].Cn = entry.GetAttributeValue("cn")
 	}
 
@@ -113,5 +132,5 @@ func GetAll(ldapc Connection) (Items, error) {
 			fmt.Printf("%+v\n", items[i])
 		}
 	*/
-	return items, err
+	return items, dfgs, err
 }

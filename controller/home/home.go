@@ -19,7 +19,7 @@ func Load() {
 func Index(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 
-	result, err := ldap.GetAll(c.LDAP)
+	people, dfgs, err := ldap.GetAll(c.LDAP)
 	if err != nil {
 		c.FlashError(err)
 		return
@@ -29,7 +29,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	if c.Sess.Values["id"] != nil {
 		v.Vars["first_name"] = c.Sess.Values["first_name"]
 	}
-	v.Vars["result"] = result
+	v.Vars["people"] = people
+	v.Vars["dfgs"] = dfgs
 
 	v.Render(w, r)
 }

@@ -3,8 +3,16 @@
 {{define "content"}}
 	<p><h2>Render DFG, members and their roles from corporate LDAP</h2></p>
 
-	{{range $foo := index $.result}}
-		<p>{{$foo.Cn}}</p>
+	{{range $dfg := index $.dfgs}}
+		<p>{{$dfg}}</p>
+
+		{{range $foo := index $.people}}
+			{{range $foo.Dfg}}
+				{{if eq . $dfg}}
+					<p>{{$foo.Cn}} - {{$foo.Mail}}</p>
+				{{end}}
+			{{end}}
+		{{end}}
 	{{end}}
 
 	{{template "footer" .}}
