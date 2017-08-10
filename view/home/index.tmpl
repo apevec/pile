@@ -1,18 +1,30 @@
-{{define "title"}}Drafting: DFG list{{end}}
+{{define "title"}}DFG list (Drafting){{end}}
 {{define "head"}}{{end}}
 {{define "content"}}
 	<p><h2>Render DFG, members and their roles from corporate LDAP</h2></p>
 
 	{{range $dfg := index $.dfgs}}
-		<p>{{$dfg}}</p>
-
+	<table class="table table-striped table-bordered">
+		<thead>
+			<tr>
+				<th colspan="4">{{$dfg}}</th>
+			</tr>
+		</thead>
+		<tbody>
 		{{range $foo := index $.people}}
 			{{range $foo.Dfg}}
 				{{if eq . $dfg}}
-					<p>{{$foo.Cn}} - {{$foo.Mail}}</p>
+			<tr>
+				<td>{{$foo.Cn}}</td>
+				<td>{{$foo.Role}}</td>
+				<td>{{$foo.Mail}}</td>
+				<td>{{$foo.Title}}</td>
+			</tr>
 				{{end}}
 			{{end}}
 		{{end}}
+		</tbody>
+	</table>
 	{{end}}
 
 	{{template "footer" .}}
