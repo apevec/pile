@@ -16,7 +16,7 @@ import (
 type Item struct {
 	mail  string
 	title string
-	cn    string
+	Cn    string
 	dfg   []string
 	role  []string
 }
@@ -27,7 +27,7 @@ type Connection interface {
 	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
 }
 
-func Get(ldapc Connection) (Items, error) {
+func GetAll(ldapc Connection) (Items, error) {
 	items := make(Items)
 
 	// TODO: Make it dedup, sane and readable
@@ -104,7 +104,7 @@ func Get(ldapc Connection) (Items, error) {
 		uid = entry.GetAttributeValue("uid")
 		items[uid].mail = entry.GetAttributeValue("mail")
 		items[uid].title = entry.GetAttributeValue("title")
-		items[uid].cn = entry.GetAttributeValue("cn")
+		items[uid].Cn = entry.GetAttributeValue("cn")
 	}
 
 	/*

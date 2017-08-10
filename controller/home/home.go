@@ -19,7 +19,7 @@ func Load() {
 func Index(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 
-	result, err := ldap.Get(c.LDAP)
+	result, err := ldap.GetAll(c.LDAP)
 	if err != nil {
 		c.FlashError(err)
 		return

@@ -1,9 +1,12 @@
 {{define "title"}}Drafting: DFG list{{end}}
 {{define "head"}}{{end}}
 {{define "content"}}
+	<p><h2>Render DFG, members and their roles from corporate LDAP</h2></p>
 
-	<p> {{.result}} </p>
-	
+	{{range $foo := index $.result}}
+		<p>{{$foo.Cn}}</p>
+	{{end}}
+
 	{{template "footer" .}}
 {{end}}
 {{define "foot"}}{{end}}
