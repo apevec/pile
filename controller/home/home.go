@@ -31,6 +31,5 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 	v.Vars["people"] = people
 	v.Vars["dfgs"] = dfgs
-
 	v.Render(w, r)
 }

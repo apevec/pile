@@ -29,25 +29,10 @@ type Connection interface {
 	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
 }
 
-func removeDuplicatesUnordered(elements []string) []string {
-	encountered := map[string]bool{}
-
-	// Create a map of all unique elements.
-	for v := range elements {
-		encountered[elements[v]] = true
-	}
-
-	// Place all keys from the map into a slice.
-	result := []string{}
-	for key, _ := range encountered {
-		result = append(result, key)
-	}
-	return result
-}
-
-func GetAll(ldapc Connection) (Items, []string, error) {
+func GetAll(ldapc Connection) (Items, map[string]string, error) {
 	items := make(Items)
-	var dfgs []string
+	var dfgs map[string]string
+	dfgs = make(map[string]string)
 
 	// TODO: Make it dedup, sane and readable
 	// TODO: accomodate DFG->Squad relation
@@ -57,7 +42,7 @@ func GetAll(ldapc Connection) (Items, []string, error) {
 		"ou=adhoc,ou=managedGroups,dc=redhat,dc=com",
 		ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
 		"(&(objectClass=rhatGroup)(cn=rhos-dfg-*))",
-		[]string{"cn", "memberUid"},
+		[]string{"cn", "memberUid", "description"},
 		nil,
 	)
 
@@ -71,11 +56,13 @@ func GetAll(ldapc Connection) (Items, []string, error) {
 			if _, ok := items[member]; !ok {
 				items[member] = &Item{}
 			}
-			items[member].Dfg = append(items[member].Dfg, entry.GetAttributeValue("cn"))
-			dfgs = append(dfgs, entry.GetAttributeValue("cn"))
+			cn := entry.GetAttributeValue("cn")
+			items[member].Dfg = append(items[member].Dfg, cn)
+			if _, ok := dfgs[cn]; !ok {
+				dfgs[cn] = entry.GetAttributeValue("description")
+			}
 		}
 	}
-	dfgs = removeDuplicatesUnordered(dfgs)
 
 	// Roles:
 	searchRequest = ldap.NewSearchRequest(
