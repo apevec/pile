@@ -3,6 +3,7 @@ package ldap
 
 import (
 	"fmt"
+	"strings"
 
 	"gopkg.in/ldap.v2"
 )
@@ -29,13 +30,11 @@ type Connection interface {
 	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
 }
 
-func GetAll(ldapc Connection) (Items, map[string]string, error) {
+func GetAll(ldapc Connection) (Items, map[string]map[string]string, error) {
 	items := make(Items)
-	var dfgs map[string]string
-	dfgs = make(map[string]string)
+	dfgs := make(map[string]map[string]string)
 
 	// TODO: Make it dedup, sane and readable
-	// TODO: accomodate DFG->Squad relation
 
 	// DFGs:
 	searchRequest := ldap.NewSearchRequest(
@@ -57,10 +56,21 @@ func GetAll(ldapc Connection) (Items, map[string]string, error) {
 				items[member] = &Item{}
 			}
 			cn := entry.GetAttributeValue("cn")
-			items[member].Dfg = append(items[member].Dfg, cn)
-			if _, ok := dfgs[cn]; !ok {
-				dfgs[cn] = entry.GetAttributeValue("description")
+			// TODO: remove this check
+			if member != "aarapov" || (cn == "rhos-dfg-cloud-applications" || cn == "rhos-dfg-portfolio-integration") {
+				items[member].Dfg = append(items[member].Dfg, cn)
 			}
+
+			squad := "core"
+			if idx := strings.Index(cn, "-squad-"); idx != -1 {
+				squad = cn
+				cn = cn[:idx]
+			}
+
+			if _, ok := dfgs[cn]; !ok {
+				dfgs[cn] = make(map[string]string)
+			}
+			dfgs[cn][squad] = entry.GetAttributeValue("description")
 		}
 	}
 
