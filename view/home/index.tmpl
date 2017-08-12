@@ -29,11 +29,11 @@
 						<tbody>
 							{{range $squad, $desc := index $iter -}}
 								{{if eq $squad "core" -}}
-									{{range $foo := index $.people -}}
+									{{range $uid, $foo := index $.people -}}
 										{{range $foo.Dfg -}}
 										{{if eq . $dfg -}}
 										<tr>
-										<td>{{$foo.Cn}}</td>
+										<td><a href="https://rover.redhat.com/people/profile/{{$uid}}/">{{$foo.Cn}}</a></td>
 										<td>{{$foo.Role}}</td>
 										<td>{{$foo.Mail}}</td>
 										<td>{{$foo.Mobile}}</td>
@@ -47,11 +47,11 @@
 									<tr>
 										<th colspan="6"><i class="fa fa-angle-right" aria-hidden="true"></i>&nbsp; {{$desc}} Squad</th>
 									</tr>
-									{{range $foo := index $.people -}}
+									{{range $uid, $foo := index $.people -}}
 										{{range $foo.Dfg -}}
 										{{if eq . $squad -}}
 										<tr>
-										<td>&nbsp; {{$foo.Cn}}</td>
+										<td><a href="https://rover.redhat.com/people/profile/{{$uid}}/">&nbsp; {{$foo.Cn}}</a></td>
 										<td>{{$foo.Role}}</td>
 										<td>{{$foo.Mail}}</td>
 										<td>{{$foo.Mobile}}</td>
@@ -82,14 +82,14 @@
 							<tbody>
 							{{range $dfg, $iter := index $.dfgs -}}
 								{{range $squad, $desc := index $iter -}}
-									{{range $foo := index $.people -}}
+									{{range $uid, $foo := index $.people -}}
 										{{if eq $squad "core" -}}
 											{{range $foo.Dfg -}}
 												{{if eq . $dfg -}}
 												<tr>
 												<td>{{$desc}}</td>
 												<td>{{$foo.Role}}</td>
-												<td>{{$foo.Cn}}</td>
+												<td><a href="https://rover.redhat.com/people/profile/{{$uid}}/">{{$foo.Cn}}</a></td>
 												<td>{{$foo.Mail}}</td>
 												</tr>
 												{{- end}}
@@ -100,7 +100,7 @@
 												<tr>
 												<td><i class="fa fa-angle-right" aria-hidden="true"></i>&nbsp; {{$desc}}</td>
 												<td>{{$foo.Role}}</td>
-												<td>{{$foo.Cn}}</td>
+												<td><a href="https://rover.redhat.com/people/profile/{{$uid}}/">{{$foo.Cn}}</a></td>
 												<td>{{$foo.Mail}}</td>
 												</tr>
 												{{- end}}
