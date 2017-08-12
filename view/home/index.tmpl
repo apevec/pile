@@ -29,9 +29,6 @@
 						<tbody>
 							{{range $squad, $desc := index $iter -}}
 								{{if eq $squad "core" -}}
-									<tr>
-										<th colspan="6">Folks</th>
-									</tr>
 									{{range $foo := index $.people -}}
 										{{range $foo.Dfg -}}
 										{{if eq . $dfg -}}
@@ -48,13 +45,13 @@
 									{{- end}}
 								{{- else -}}
 									<tr>
-										<th colspan="6">{{$desc}} Squad</th>
+										<th colspan="6"><i class="fa fa-angle-right" aria-hidden="true"></i>&nbsp; {{$desc}} Squad</th>
 									</tr>
 									{{range $foo := index $.people -}}
 										{{range $foo.Dfg -}}
 										{{if eq . $squad -}}
 										<tr>
-										<td>{{$foo.Cn}}</td>
+										<td>&nbsp; {{$foo.Cn}}</td>
 										<td>{{$foo.Role}}</td>
 										<td>{{$foo.Mail}}</td>
 										<td>{{$foo.Mobile}}</td>
@@ -101,7 +98,7 @@
 											{{range $foo.Dfg -}}
 												{{if eq . $squad -}}
 												<tr>
-												<td>{{$desc}}</td>
+												<td><i class="fa fa-angle-right" aria-hidden="true"></i>&nbsp; {{$desc}}</td>
 												<td>{{$foo.Role}}</td>
 												<td>{{$foo.Cn}}</td>
 												<td>{{$foo.Mail}}</td>
