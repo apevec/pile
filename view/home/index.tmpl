@@ -18,8 +18,8 @@
 			<div class="tab-content clearfix">
 				<div class="tab-pane active" id="1a">
 					<p/>
-						{{range $dfg, $iter := index $.dfgs}}
-							<div class="table-responsive">
+						{{range $dfg, $iter := index $.dfgs -}}
+						<div class="table-responsive">
 						<table class="table table-striped table-bordered table-hover">
 						<thead>
 							<tr>
@@ -28,7 +28,7 @@
 						</thead>
 						<tbody>
 							{{range $squad, $desc := index $iter -}}
-								{{if eq $squad "core"}}
+								{{if eq $squad "core" -}}
 									<tr>
 										<th colspan="6">Folks</th>
 									</tr>
@@ -46,7 +46,7 @@
 										{{- end}}
 										{{- end}}
 									{{- end}}
-								{{else}}
+								{{- else -}}
 									<tr>
 										<th colspan="6">{{$desc}} Squad</th>
 									</tr>
@@ -64,12 +64,12 @@
 										{{- end}}
 										{{- end}}
 									{{- end}}
-								{{end}}
+								{{- end}}
 							{{- end}}
 						</tbody>
 						</table>
-							</div>
-						{{end}}
+						</div>
+						{{- end}}
 				</div>
 
 				<div class="tab-pane" id="2a">
@@ -86,7 +86,7 @@
 							{{range $dfg, $iter := index $.dfgs -}}
 								{{range $squad, $desc := index $iter -}}
 									{{range $foo := index $.people -}}
-										{{if eq $squad "core"}}
+										{{if eq $squad "core" -}}
 											{{range $foo.Dfg -}}
 												{{if eq . $dfg -}}
 												<tr>
@@ -97,7 +97,7 @@
 												</tr>
 												{{- end}}
 											{{- end}}
-										{{else}}
+										{{- else -}}
 											{{range $foo.Dfg -}}
 												{{if eq . $squad -}}
 												<tr>
