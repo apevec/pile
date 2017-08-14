@@ -97,7 +97,7 @@ gulp.task('vuejs', function() {
 
 // Flip
 gulp.task('flip', function() {
-	return gulp.src('node_modules/flip/flip.js')
+	return gulp.src('node_modules/flip/dist/jquery.flip.min.js')
 		.pipe(gulp.dest(folderAsset + '/static/js/'));
 });
 
