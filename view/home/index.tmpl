@@ -1,5 +1,7 @@
 {{define "title"}}DFG list (Drafting){{end}}
-{{define "head"}}{{end}}
+{{define "head"}}
+	{{JS "/static/js/vue.min.js"}}
+{{end}}
 {{define "content"}}
 	<div class="container"><h1>Render Corporate LDAP, RHOS-wise!</h1></div>
 		<div id="exTab1" class="container">	
@@ -116,10 +118,21 @@
 
 				<div class="tab-pane" id="3a">
 					<h3>TODO</h3>
+					<div id="app">${message}</div>
 				</div>
 			</div>
 		</div>
 	</div>
+
+<script>
+let app = new Vue({
+  el: '#app',
+  delimiters: ['${', '}'],
+  data: {
+    message: 'Hello Vue!'
+  }
+})
+</script>
 
 	{{template "footer" .}}
 {{end}}

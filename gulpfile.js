@@ -89,6 +89,12 @@ gulp.task('patternfly', function() {
 		.pipe(gulp.dest(folderAsset + '/static/js/'));
 });
 
+// Vue.js
+gulp.task('vuejs', function() {
+	return gulp.src('node_modules/vue/dist/vue*min.js')
+		.pipe(gulp.dest(folderAsset + '/static/js/'));
+});
+
 // Underscore Task
 gulp.task('underscore', function() {
 	return gulp.src('node_modules/underscore/underscore-min.*')
@@ -262,7 +268,7 @@ gulp.task('watch', ['server:build'], function() {
 });
 
 // Init - every task
-gulp.task('init', ['sass', 'javascript', 'jquery', 'bootstrap', 'patternfly', 'underscore', 'favicon', 'server:build']);
+gulp.task('init', ['sass', 'javascript', 'jquery', 'bootstrap', 'patternfly', 'vuejs', 'underscore', 'favicon', 'server:build']);
 
 // Default - only run the tasks that change often
 gulp.task('default', ['sass', 'javascript', 'server:build']);
