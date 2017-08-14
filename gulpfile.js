@@ -95,6 +95,12 @@ gulp.task('vuejs', function() {
 		.pipe(gulp.dest(folderAsset + '/static/js/'));
 });
 
+// Flip
+gulp.task('flip', function() {
+	return gulp.src('node_modules/flip/flip.js')
+		.pipe(gulp.dest(folderAsset + '/static/js/'));
+});
+
 // Underscore Task
 gulp.task('underscore', function() {
 	return gulp.src('node_modules/underscore/underscore-min.*')
@@ -268,7 +274,7 @@ gulp.task('watch', ['server:build'], function() {
 });
 
 // Init - every task
-gulp.task('init', ['sass', 'javascript', 'jquery', 'bootstrap', 'patternfly', 'vuejs', 'underscore', 'favicon', 'server:build']);
+gulp.task('init', ['sass', 'javascript', 'jquery', 'bootstrap', 'patternfly', 'vuejs', 'flip', 'underscore', 'favicon', 'server:build']);
 
 // Default - only run the tasks that change often
 gulp.task('default', ['sass', 'javascript', 'server:build']);
