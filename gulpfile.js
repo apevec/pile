@@ -75,7 +75,7 @@ gulp.task('bootstrap', function() {
 		.pipe(gulp.dest(folderAsset + '/static/js/'));
 });
 
-// Patterbfly Task
+// Patternfly Task
 gulp.task('patternfly', function() {
 	gulp.src('node_modules/patternfly/dist/css/patternfly-additions.min.*')
 		.pipe(gulp.dest(folderAsset + '/static/css/'));
