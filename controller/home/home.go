@@ -2,6 +2,7 @@
 package home
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/arapov/pile/lib/flight"
@@ -25,11 +26,22 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	jdfgs, err := json.Marshal(dfgs)
+	if err != nil {
+		c.FlashError(err)
+		jdfgs = []byte(`{}`)
+	}
+	jpeople, err := json.Marshal(people)
+	if err != nil {
+		c.FlashError(err)
+		jpeople = []byte(`{}`)
+	}
+
 	v := c.View.New("home/index")
 	if c.Sess.Values["id"] != nil {
 		v.Vars["first_name"] = c.Sess.Values["first_name"]
 	}
-	v.Vars["people"] = people
-	v.Vars["dfgs"] = dfgs
+	v.Vars["dfgs"] = jdfgs
+	v.Vars["people"] = jpeople
 	v.Render(w, r)
 }

@@ -7,7 +7,7 @@
 		<div id="exTab1" class="container">	
 			<ul class="nav nav-tabs">
 				<li class="active">
-					<a href="#1a" data-toggle="tab">Multiple Tables</a>
+					<a href="#1a" data-toggle="tab">DFGs</a>
 				</li>
 				<li>
 					<a href="#2a" data-toggle="tab">One Table</a>
@@ -17,108 +17,102 @@
 				</li>
 			</ul>
 
-			<div class="tab-content clearfix">
+			<div id="app" class="tab-content clearfix">
+				<p></p>
 				<div class="tab-pane active" id="1a">
-					<p/>
-						{{range $dfg, $iter := index $.dfgs -}}
-						<div class="table-responsive">
+					<div v-for="(iter, dfg) in dfgs" class="table-responsive">
 						<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan="6">{{index $iter "core"}}</th>
-							</tr>
-						</thead>
-						<tbody>
-							{{range $squad, $desc := index $iter -}}
-								{{if eq $squad "core" -}}
-									{{range $uid, $foo := index $.people -}}
-										{{range $foo.Dfg -}}
-										{{if eq . $dfg -}}
-										<tr>
-										<td><a href="https://rover.redhat.com/people/profile/{{$uid}}/">{{$foo.Cn}}</a></td>
-										<td>{{$foo.Role}}</td>
-										<td>{{$foo.Mail}}</td>
-										<td>{{$foo.Mobile}}</td>
-										<td>{{$foo.Location}}</td>
-										<td>{{$foo.Title}}</td>
-										</tr>
-										{{- end}}
-										{{- end}}
-									{{- end}}
-								{{- else -}}
-									<tr>
-										<th colspan="6"><i class="fa fa-angle-right" aria-hidden="true"></i>&nbsp; {{$desc}} Squad</th>
-									</tr>
-									{{range $uid, $foo := index $.people -}}
-										{{range $foo.Dfg -}}
-										{{if eq . $squad -}}
-										<tr>
-										<td><a href="https://rover.redhat.com/people/profile/{{$uid}}/">&nbsp; {{$foo.Cn}}</a></td>
-										<td>{{$foo.Role}}</td>
-										<td>{{$foo.Mail}}</td>
-										<td>{{$foo.Mobile}}</td>
-										<td>{{$foo.Location}}</td>
-										<td>{{$foo.Title}}</td>
-										</tr>
-										{{- end}}
-										{{- end}}
-									{{- end}}
-								{{- end}}
-							{{- end}}
-						</tbody>
-						</table>
-						</div>
-						{{- end}}
-				</div>
-
-				<div class="tab-pane" id="2a">
-					<p/>
-					<div class="table-responsive">
-					<table class="table table-striped table-bordered table-hover">
 							<thead>
-								<th>DFG</th>
-								<th>Role</th>
-								<th>Name</th>
-								<th>Mail</th>
+								<tr>
+									<th colspan="6">${iter.core}</th>
+								</tr>
 							</thead>
 							<tbody>
-							{{range $dfg, $iter := index $.dfgs -}}
-								{{range $squad, $desc := index $iter -}}
-									{{range $uid, $foo := index $.people -}}
-										{{if eq $squad "core" -}}
-											{{range $foo.Dfg -}}
-												{{if eq . $dfg -}}
-												<tr>
-												<td>{{$desc}}</td>
-												<td>{{$foo.Role}}</td>
-												<td><a href="https://rover.redhat.com/people/profile/{{$uid}}/">{{$foo.Cn}}</a></td>
-												<td>{{$foo.Mail}}</td>
-												</tr>
-												{{- end}}
-											{{- end}}
-										{{- else -}}
-											{{range $foo.Dfg -}}
-												{{if eq . $squad -}}
-												<tr>
-												<td><i class="fa fa-angle-right" aria-hidden="true"></i>&nbsp; {{$desc}}</td>
-												<td>{{$foo.Role}}</td>
-												<td><a href="https://rover.redhat.com/people/profile/{{$uid}}/">{{$foo.Cn}}</a></td>
-												<td>{{$foo.Mail}}</td>
-												</tr>
-												{{- end}}
-											{{- end}}
-										{{- end}}
-									{{- end}}
-								{{- end}}
-							{{- end}}
+								<template v-for="(desc, squad) in iter">
+									<template v-if="squad === 'core'">
+										<template v-for="(foo, uid) in people">
+											<template v-for="belong in foo.Dfg">
+											<tr v-if="belong === dfg">
+												<td><a v-bind:href="'https://rover.redhat.com/people/profile/' + uid + '/'">${foo.Cn}</a></td>
+												<td>${foo.Role}</td>
+												<td>${foo.Mail}</td>
+												<td>${foo.Mobile}</td>
+												<td>${foo.Location}</td>
+												<td>${foo.Title}</td>
+											</tr>
+											</template>
+										</template>
+									</template>
+									<template v-else>
+									<tr>
+										<th colspan="6"><i class="fa fa-angle-right" aria-hidden="true"></i>&nbsp; ${desc}</th>
+									</tr>
+									</template>
+									<template v-for="(foo, uid) in people">
+										<template v-for="belong in foo.Dfg">
+											<tr v-if="belong === squad">
+												<td><a v-bind:href="'https://rover.redhat.com/people/profile/' + uid + '/'">${foo.Cn}</a></td>
+												<td>${foo.Role}</td>
+												<td>${foo.Mail}</td>
+												<td>${foo.Mobile}</td>
+												<td>${foo.Location}</td>
+												<td>${foo.Title}</td>
+											</tr>
+										</template>
+									</template>
+								</template>
 							</tbody>
 						</table>
 					</div>
 				</div>
 
+				<div class="tab-pane" id="2a">
+					<div class="table-responsive">
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th>DFG</th>
+								<th>Role</th>
+								<th>Name</th>
+								<th>Mail</th>
+							</tr>
+						</thead>
+						<tbody>
+							<template v-for="(iter, dfg) in dfgs">
+								<template v-for="(desc, squad) in iter">
+									<template v-if="squad === 'core'">	
+										<template v-for="(foo, uid) in people">
+											<template v-for="belong in foo.Dfg">
+												<tr v-if="belong == dfg">
+													<td>${desc}</td>
+													<td>${foo.Role}</td>
+													<td><a v-bind:href="'https://rover.redhat.com/people/profile/' + uid + '/'">${foo.Cn}</a></td>
+													<td>${foo.Mail}</td>
+												</tr>
+											</template>
+										</template>
+									</template>
+									<template v-else>
+										<template v-for="(foo, uid) in people">
+											<template v-for="belong in foo.Dfg">
+												<tr v-if="belong == squad">
+													<td><i class="fa fa-angle-right" aria-hidden="true"></i>&nbsp; ${desc}</td>
+													<td>${foo.Role}</td>
+													<td><a v-bind:href="'https://rover.redhat.com/people/profile/' + uid + '/'">${foo.Cn}</a></td>
+													<td>${foo.Mail}</td>
+												</tr>
+											</template>
+										</template>
+									</template>
+								</template>
+							</template>
+						</tbody>
+					</table>
+					</div>
+				</div>
+
 				<div class="tab-pane" id="3a">
 					<h3>TODO</h3>
-					<div id="app">${message}</div>
 				</div>
 			</div>
 		</div>
@@ -126,10 +120,11 @@
 
 <script>
 let app = new Vue({
-  el: '#app',
-  delimiters: ['${', '}'],
-  data: {
-    message: 'Hello Vue!'
+	el: '#app',
+	delimiters: ['${', '}'],
+	data: {
+		dfgs: $.parseJSON(atob({{.dfgs}})),
+		people: $.parseJSON(atob({{.people}}))
   }
 })
 </script>
