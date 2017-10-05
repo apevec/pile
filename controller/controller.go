@@ -8,6 +8,7 @@ import (
 	"github.com/arapov/pile/controller/login"
 	"github.com/arapov/pile/controller/notepad"
 	"github.com/arapov/pile/controller/register"
+	"github.com/arapov/pile/controller/roster"
 	"github.com/arapov/pile/controller/static"
 	"github.com/arapov/pile/controller/status"
 )
@@ -22,4 +23,5 @@ func LoadRoutes() {
 	static.Load()
 	status.Load()
 	notepad.Load()
+	roster.Load()
 }

@@ -1,0 +1,31 @@
+{{define "title"}}Roster{{end}}
+{{define "head"}}
+	{{JS "/static/js/vue.min.js"}}
+	{{JS "/static/js/vue-resource.min.js"}}
+{{end}}
+{{define "content"}}
+	<div class="page-header">
+		<h1>Roster</h1>
+	</div>
+	
+	<div id="roster">
+		<p v-for="(dfg, i) in groups">${dfg.Name}</p>
+	</div>
+
+	<script type="text/javascript">
+		let roster = new Vue({
+			el: '#roster',
+			delimiters: ['${', '}'],
+			data: {
+				groups: [],
+			},
+			mounted: function() {
+				this.$http.get('/roster/get').then(function(response) {
+					this.groups = response.body
+				})
+			}
+		});
+	</script>
+	{{template "footer" .}}
+{{end}}
+{{define "foot"}}{{end}}
