@@ -95,6 +95,12 @@ gulp.task('vuejs', function() {
 		.pipe(gulp.dest(folderAsset + '/static/js/'));
 });
 
+// Vue-resource
+gulp.task('vuejs-resource', function() {
+	return gulp.src('node_modules/vue-resource/dist/vue-resource.min.js')
+		.pipe(gulp.dest(folderAsset + '/static/js/'));
+});
+
 // Flip
 gulp.task('flip', function() {
 	return gulp.src('node_modules/flip/dist/jquery.flip.min.js')
@@ -274,7 +280,7 @@ gulp.task('watch', ['server:build'], function() {
 });
 
 // Init - every task
-gulp.task('init', ['sass', 'javascript', 'jquery', 'bootstrap', 'patternfly', 'vuejs', 'flip', 'underscore', 'favicon', 'server:build']);
+gulp.task('init', ['sass', 'javascript', 'jquery', 'bootstrap', 'patternfly', 'vuejs', 'vuejs-resource', 'flip', 'underscore', 'favicon', 'server:build']);
 
 // Default - only run the tasks that change often
 gulp.task('default', ['sass', 'javascript', 'server:build']);
