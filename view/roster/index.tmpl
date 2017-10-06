@@ -4,28 +4,90 @@
 	{{JS "/static/js/vue-resource.min.js"}}
 {{end}}
 {{define "content"}}
-	<div class="page-header">
-		<h1>Roster</h1>
-	</div>
-	
-	<div id="roster">
-		<p v-for="(dfg, i) in groups">${dfg.Name}</p>
+<div id="roster">
+	<div class="page-header cloud">
+		<a v-for="dfg in groups" v-bind:href="'#' + dfg.Name">[ ${dfg.Desc} ]</a>
 	</div>
 
-	<script type="text/javascript">
-		let roster = new Vue({
-			el: '#roster',
-			delimiters: ['${', '}'],
-			data: {
-				groups: [],
-			},
-			mounted: function() {
-				this.$http.get('/roster/get').then(function(response) {
-					this.groups = response.body
-				})
+	<div v-for="dfg in groups" class="panel panel-default">
+		<div class="panel-heading" :id="dfg.Name">
+			<h3 class="panel-title">${dfg.Desc}
+				<span v-if="dfg.Squads" class="badge" title="Count of Squads in DFG">${dfg.SquadsSz}</span>
+			</h3>
+		</div>
+		<div class="panel-body">
+			<!--div v-if="dfg.Squads">
+				<h4><strong>Squads: </strong><span v-for="squad in dfg.Squads">${squad}&nbsp;</span></h4>
+			</div-->
+			<div class="dfg-details">
+				<a v-if="dfg.Backlog" :href="dfg.Backlog">[ Backlog ]</a>
+				<a v-if="dfg.Mission" :href="dfg.Mission">[ Mission ]</a>
+			</div>
+			<div class="dfg-core">
+				<div v-if="dfg.PMs" class="dfg-core pm">
+					Product Management: <a v-for="PM in dfg.PMs" :href="'https://rover.redhat.com/people/profile/' + PM.Uid + '/'">[ ${PM.Uid} ]</a>
+				</div>
+				<div v-if="dfg.Stewards" class="dfg-core stewards">
+					Stewards: <a v-for="Steward in dfg.Stewards" :href="'https://rover.redhat.com/people/profile/' + Steward.Uid + '/'">[ ${Steward.Uid} ]</a>
+				</div>
+			</div>
+
+			<button v-on:click="showDetails(dfg.Name)" class="btn btn-default pull-right" type="button">Details</button>
+			<keep-alive>
+				<component v-if="active == dfg.Name" :group="dfg.Name" :is="current"></component>
+			</keep-alive>
+
+		</div>
+	</div>
+</div>
+
+<template id="details">
+	<div>
+		<h3>tada: ${group}</h3>
+		<h2>some is ${members}</h2>
+	</div>
+</template>
+
+<script type="text/javascript">
+	Vue.component('groupDetails', {
+		delimiters: ['${', '}'],
+		props: ['group'],
+		template: "#details",
+		data: function () {
+			return {
+				 members: []
 			}
-		});
-	</script>
+		},
+		mounted: function () {
+			//alert(this.some)
+			this.$http.get('/roster/v1/members/'+this.group).then(function(response) {
+				this.members = response.body
+			})
+		}
+	})
+
+	let roster = new Vue({
+		el: '#roster',
+		delimiters: ['${', '}'],
+		data: {
+			groups: [],
+			whatever: [],
+			current: "",
+			active: ""
+		},
+		mounted: function() {
+			this.$http.get('/roster/v1/groups').then(function(response) {
+				this.groups = response.body
+			})
+		},
+		methods: {
+			showDetails: function (group) {
+				this.current = "groupDetails"
+				this.active = group
+			},
+		}
+	});
+</script>
 	{{template "footer" .}}
 {{end}}
 {{define "foot"}}{{end}}
