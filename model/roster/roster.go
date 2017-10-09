@@ -1,4 +1,4 @@
-// Package roster
+// Package roster - tbd
 package roster
 
 import (
@@ -9,38 +9,35 @@ import (
 	ldap "gopkg.in/ldap.v2"
 )
 
-// Item defines the model.
-type Item struct {
+// Member - tbd
+type Member struct {
+	UID  string
+	Name string
+	Role string
 }
 
-// DFGroup defines the DFG model.
-type DFGroup struct {
+// Group defines the DFG model.
+type Group struct {
 	Name     string
 	Desc     string
 	Members  []string
 	Backlog  string
 	Mission  string
-	PMs      []Person
-	Stewards []Person
+	PMs      []Member
+	Stewards []Member
 	Squads   map[string]string
 	SquadsSz int
 }
 
-var dfgs []DFGroup
-
-type Person struct {
-	Uid  string
-	Name string
-	Role string
-}
-
-var people = map[string]*Person{}
+var groups []Group
+var people = map[string]*Member{}
 
 // Connection is an interface for making queries.
 type Connection interface {
 	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
 }
 
+// decodeNote - returns kv
 func decodeNote(note string) map[string]string {
 	result := make(map[string]string)
 
@@ -71,16 +68,16 @@ func fillRoles(ldapc Connection) {
 		role := rolesPeople.GetAttributeValue("cn")
 		for _, person := range rolesPeople.GetAttributeValues("memberUid") {
 			if _, ok := people[person]; !ok {
-				people[person] = &Person{}
+				people[person] = &Member{}
 			}
-			people[person] = &Person{}
-			people[person].Uid = person
+			people[person] = &Member{}
+			people[person].UID = person
 			people[person].Role = role
 		}
 	}
 }
 
-func fillDFGs(ldapc Connection) {
+func fillGroups(ldapc Connection) {
 	sGroupRequest := ldap.NewSearchRequest(
 		"ou=adhoc,ou=managedGroups,dc=redhat,dc=com",
 		ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
@@ -92,9 +89,9 @@ func fillDFGs(ldapc Connection) {
 	ldapGroups, _ := ldapc.Search(sGroupRequest)
 	// TODO: check for err
 
-	for _, group := range ldapGroups.Entries {
-		dfg := DFGroup{}
-		name := group.GetAttributeValue("cn")
+	for _, ldapGroup := range ldapGroups.Entries {
+		group := Group{}
+		name := ldapGroup.GetAttributeValue("cn")
 
 		sSquadRequest := ldap.NewSearchRequest(
 			"ou=adhoc,ou=managedGroups,dc=redhat,dc=com",
@@ -106,12 +103,12 @@ func fillDFGs(ldapc Connection) {
 
 		// rhatGroupNotes is in plain text as of 10/06
 		// syntax: pile:[keyword]=[value]
-		note := group.GetAttributeValue("rhatGroupNotes")
+		note := ldapGroup.GetAttributeValue("rhatGroupNotes")
 		if len(note) > 0 {
 			kv := decodeNote(note)
 			// TODO: check for keys availability
-			dfg.Backlog = kv["backlog"]
-			dfg.Mission = kv["mission"]
+			group.Backlog = kv["backlog"]
+			group.Mission = kv["mission"]
 		}
 
 		// Check whether Group has Squads
@@ -119,59 +116,53 @@ func fillDFGs(ldapc Connection) {
 		ldapSquads, _ := ldapc.Search(sSquadRequest)
 		// TODO: check for err
 		if len(ldapSquads.Entries) > 0 {
-			dfg.Squads = make(map[string]string)
-			dfg.SquadsSz = 0
-			for _, squad := range ldapSquads.Entries {
-				dfg.Squads[squad.GetAttributeValue("cn")] = squad.GetAttributeValue("description")
-				dfg.SquadsSz++
+			group.Squads = make(map[string]string)
+			group.SquadsSz = 0
+			for _, ldapSquad := range ldapSquads.Entries {
+				group.Squads[ldapSquad.GetAttributeValue("cn")] = ldapSquad.GetAttributeValue("description")
+				group.SquadsSz++
 				// TODO: here we want to decode notes for squad specific details
 			}
 		}
 
-		dfg.Name = group.GetAttributeValue("cn")
-		dfg.Desc = group.GetAttributeValue("description")
+		group.Name = ldapGroup.GetAttributeValue("cn")
+		group.Desc = ldapGroup.GetAttributeValue("description")
 
-		for _, member := range group.GetAttributeValues("memberUid") {
+		for _, member := range ldapGroup.GetAttributeValues("memberUid") {
 			if _, ok := people[member]; ok {
 				switch people[member].Role {
 				case "rhos-pm":
-					dfg.PMs = append(dfg.PMs, *people[member])
+					group.PMs = append(group.PMs, *people[member])
 				case "rhos-stewards-em":
 				case "rhos-stewards-qe":
-					dfg.Stewards = append(dfg.Stewards, *people[member])
+					group.Stewards = append(group.Stewards, *people[member])
 				}
 			}
 		}
 
-		dfgs = append(dfgs, dfg)
+		groups = append(groups, group)
 	}
 }
 
-// GetPeople - tbd
-func GetMembers(ldapc Connection, group string) []Person {
+// GetMembers - tbd
+func GetMembers(ldapc Connection, group string) []Member {
 
-	for _, grp := range dfgs {
+	for _, grp := range groups {
 		if grp.Name == group {
 			return grp.PMs
 		}
 	}
 
-	return []Person{}
+	return []Member{}
 }
 
-// GetDFGroups - tbd
-func GetDFGroups(ldapc Connection) []DFGroup {
+// GetGroups - tbd
+func GetGroups(ldapc Connection) []Group {
 
-	if len(dfgs) == 0 {
+	if len(groups) == 0 {
 		fillRoles(ldapc)
-		fillDFGs(ldapc)
+		fillGroups(ldapc)
 	}
 
-	//fmt.Println(dfgs)
-	return dfgs
-}
-
-// GetDFGroupMembers - tbd
-func GetDFGroupMembers(ldapc Connection) {
-	return
+	return groups
 }

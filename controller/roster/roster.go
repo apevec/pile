@@ -23,11 +23,6 @@ func Load() {
 	router.Get(uri, Index) //, c...)
 	router.Get(uri+"/v1/groups", Get)
 	router.Get(uri+"/v1/members/:group", GetMembers)
-	//	router.Post(uri+"/create", Store, c...)
-	//	router.Get(uri+"/view/:id", Show, c...)
-	//	router.Get(uri+"/edit/:id", Edit, c...)
-	//	router.Patch(uri+"/edit/:id", Update, c...)
-	//	router.Delete(uri+"/:id", Destroy, c...)
 }
 
 // Index displays the items.
@@ -54,7 +49,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
-	dfgs := roster.GetDFGroups(c.LDAP)
+	dfgs := roster.GetGroups(c.LDAP)
 	// Sort dfgs by dfgs.Name
 	sort.Slice(dfgs, func(i, j int) bool {
 		switch strings.Compare(dfgs[i].Desc, dfgs[j].Desc) {
