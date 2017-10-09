@@ -11,41 +11,103 @@
 
 	<div v-for="dfg in groups" class="panel panel-default">
 		<div class="panel-heading" :id="dfg.Name">
-			<h3 class="panel-title">${dfg.Desc}
-				<span v-if="dfg.Squads" class="badge" title="Count of Squads in DFG">${dfg.SquadsSz}</span>
-			</h3>
+			<h2 class="panel-title">${dfg.Desc}
+				<span class="pull-right">
+					<span v-if="dfg.Squads" title="Squads"><i class="fa fa-users"></i> ${dfg.SquadsSz}</span>
+					<span title="People"><i class="fa fa-user-circle-o"></i> ${dfg.Members.length}</span>
+				</span>
+			</h2>
 		</div>
+
 		<div class="panel-body">
+			<div class="container-fluid">
 
-			<!-- Group Core Info -->
-			<div class="dfg-details">
-				<a v-if="dfg.Backlog" :href="dfg.Backlog">[ Backlog ]</a>
-				<a v-if="dfg.Mission" :href="dfg.Mission">[ Mission ]</a>
-			</div>
-			<div class="dfg-core">
-				<div v-if="dfg.PMs" class="dfg-core pm">
-					Product Management: <a v-for="PM in dfg.PMs" :href="'https://rover.redhat.com/people/profile/' + PM.UID + '/'">[ ${PM.UID} ]</a>
+				<!-- Group Core Info -->
+				<div class="row">
+					<div class="col-md-2">
+						<div v-if="dfg.Backlog">
+							<i class="fa fa-tasks"></i>
+							<a :href="dfg.Backlog">Backlog</a>
+						</div>
+						<div v-if="dfg.Mission">
+							<i class="fa fa-bullseye"></i>
+							<a :href="dfg.Mission">Mission</a>
+						</div>
+						<div v-for="(link, name) in dfg.Links">
+							<i class="fa fa-link"></i>
+							<a :href="link">${name}</a>
+						</div>
+					</div>
+					<div class="col-md-5">
+						<div v-if="dfg.PMs">
+							<strong>Product Management:</strong>
+							<a v-for="PM in dfg.PMs" :href="'https://rover.redhat.com/people/profile/' + PM.UID + '/'"> ${PM.Name}</a>
+						</div>
+						<div v-if="dfg.Stewards">
+							<strong v-if="dfg.Stewards.length > 1">Stewards: </strong>
+							<strong v-else>Steward:</strong>
+							<a v-for="Steward in dfg.Stewards" :href="'https://rover.redhat.com/people/profile/' + Steward.UID + '/'"> ${Steward.Name}</a>
+						</div>
+					</div>
+					<div class="col-md-5">
+						<div v-if="dfg.UAs">
+							<strong>User Advocate:</strong>
+							<a v-for="UA in dfg.UAs" :href="'https://rover.redhat.com/people/profile/' + UA.UID + '/'"> ${UA.Name}</a>
+						</div>
+						<div v-if="dfg.TCs">
+							<strong>Team Catalyst:</strong>
+							<a v-for="TC in dfg.TCs" :href="'https://rover.redhat.com/people/profile/' + TC.UID + '/'"> ${TC.Name}</a>
+						</div>
+					</div>
 				</div>
-				<div v-if="dfg.Stewards" class="dfg-core stewards">
-					Stewards: <a v-for="Steward in dfg.Stewards" :href="'https://rover.redhat.com/people/profile/' + Steward.UID + '/'">[ ${Steward.UID} ]</a>
-				</div>
 			</div>
-
-			<!-- Group Details -->
-			<button v-on:click="showDetails(dfg.Name)" class="btn btn-default pull-right" type="button">Details</button>
-			<keep-alive>
-				<component v-if="active == dfg.Name" :is="current"></component>
-			</keep-alive>
-
 		</div>
+
+		<!-- Group Details -->
+		<table v-if="active != dfg.Name" class="table">
+			<tbody>
+				<tr>
+					<td>
+					<button v-on:click="showDetails(dfg.Name)" class="btn form-control" type="button"><i class="fa fa-chevron-down"></i></button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<keep-alive>
+			<component v-if="active == dfg.Name" :is="current"></component>
+		</keep-alive>
+
 	</div>
 </div>
 
 <template id="details">
-	<div>
-		<h3>tada: ${this.$parent.active}</h3>
-		<h2>some is ${members}</h2>
-	</div>
+	<table class="table table-striped table-hover">
+		<thead>
+			<tr>
+				<th>Full Name</th>
+				<th>Role</th>
+				<th>Squad</th>
+				<th>Component</th>
+				<th>IRC</th>
+				<th>External</th>
+				<th>Location</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr v-for="member in members">
+				<td><a :href="'https://rover.redhat.com/people/profile/' + member.UID + '/'">${member.Name}</a></td>
+				<td>
+					<span v-if="member.Role == 'rhos-pm'" class="label label-danger">PM</span>
+					<span v-else>${member.Role}</span>
+				</td>
+				<td>${member.Squad}</td>
+				<td>${member.Component}</td>
+				<td>${member.IRC}</td>
+				<td>${member.External}</td>
+				<td>${member.Location}</td>
+			</tr>
+		</tbody>
+	</table>
 </template>
 
 <script type="text/javascript">

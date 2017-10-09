@@ -11,9 +11,14 @@ import (
 
 // Member - tbd
 type Member struct {
-	UID  string
-	Name string
-	Role string
+	UID       string
+	Name      string
+	Role      string
+	Squad     string
+	Component string
+	External  string
+	IRC       string
+	Location  string
 }
 
 // Group defines the DFG model.
@@ -23,8 +28,11 @@ type Group struct {
 	Members  []string
 	Backlog  string
 	Mission  string
+	Links    map[string]string
 	PMs      []Member
 	Stewards []Member
+	UAs      []Member
+	TCs      []Member
 	Squads   map[string]string
 	SquadsSz int
 }
@@ -41,7 +49,7 @@ type Connection interface {
 func decodeNote(note string) map[string]string {
 	result := make(map[string]string)
 
-	re, _ := regexp.Compile(`pile:(\w*=[a-zA-z0-9:/.-]+)`)
+	re, _ := regexp.Compile(`pile:(\w*=[a-zA-z0-9:/.@-]+)`)
 	// TODO: take care of error here
 	pile := re.FindAllStringSubmatch(note, -1)
 	// TODO: code below is fragile, very fragile
@@ -66,7 +74,8 @@ func fillRoles(ldapc Connection) {
 
 	for _, rolesPeople := range ldapRolesPeople.Entries {
 		role := rolesPeople.GetAttributeValue("cn")
-		for _, person := range rolesPeople.GetAttributeValues("memberUid") {
+		members := rolesPeople.GetAttributeValues("memberUid")
+		for _, person := range members {
 			if _, ok := people[person]; !ok {
 				people[person] = &Member{}
 			}
@@ -74,6 +83,51 @@ func fillRoles(ldapc Connection) {
 			people[person].UID = person
 			people[person].Role = role
 		}
+
+		fillMembers(ldapc, members)
+	}
+}
+
+func fillMembers(ldapc Connection, members []string) {
+
+	filter := "(&(objectClass=rhatPerson)(|"
+	for _, member := range members {
+		// "(&(objectClass=rhatPerson)(|(uid=user1)(uid=user2)(uid=user3)))"
+
+		// don't do it multiple times
+		if _, ok := people[member]; ok {
+			if people[member].Name != "" {
+				continue
+			}
+		}
+
+		filter = filter + fmt.Sprintf("(uid=%s)", member)
+	}
+	filter = filter + "))"
+
+	sMembersRequest := ldap.NewSearchRequest(
+		"ou=users,dc=redhat,dc=com",
+		ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
+		filter, // The filter to apply
+		[]string{"uid", "cn", "co", "rhatBio", "rhatNickName"},
+		nil,
+	)
+
+	ldapMembers, _ := ldapc.Search(sMembersRequest)
+	// TODO: check for err
+	for _, ldapMember := range ldapMembers.Entries {
+		uid := ldapMember.GetAttributeValue("uid")
+		if _, ok := people[uid]; !ok {
+			people[uid] = &Member{}
+		}
+
+		people[uid].Name = ldapMember.GetAttributeValue("cn")
+
+		kv := decodeNote(ldapMember.GetAttributeValue("rhatBio"))
+		people[uid].Component = kv["components"]
+		people[uid].External = kv["gtalk"]
+		people[uid].IRC = ldapMember.GetAttributeValue("rhatNickName")
+		people[uid].Location = ldapMember.GetAttributeValue("co")
 	}
 }
 
@@ -81,7 +135,7 @@ func fillGroups(ldapc Connection) {
 	sGroupRequest := ldap.NewSearchRequest(
 		"ou=adhoc,ou=managedGroups,dc=redhat,dc=com",
 		ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
-		"(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))",
+		"(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))(!(cn=rhos-*lt*))))",
 		[]string{"cn", "description", "memberUid", "rhatGroupNotes"},
 		nil,
 	)
@@ -107,9 +161,19 @@ func fillGroups(ldapc Connection) {
 		if len(note) > 0 {
 			kv := decodeNote(note)
 			// TODO: check for keys availability
-			group.Backlog = kv["backlog"]
-			group.Mission = kv["mission"]
+			group.Links = make(map[string]string)
+			for k, v := range kv {
+				switch k {
+				case "backlog":
+					group.Backlog = v
+				case "mission":
+					group.Mission = v
+				default:
+					group.Links[strings.Title(k)] = v
+				}
+			}
 		}
+		group.Members = ldapGroup.GetAttributeValues("memberUid")
 
 		// Check whether Group has Squads
 		// TODO: don't call this ldap search for every group
@@ -122,6 +186,12 @@ func fillGroups(ldapc Connection) {
 				group.Squads[ldapSquad.GetAttributeValue("cn")] = ldapSquad.GetAttributeValue("description")
 				group.SquadsSz++
 				// TODO: here we want to decode notes for squad specific details
+				squadMembers := ldapSquad.GetAttributeValues("memberUid")
+				fillMembers(ldapc, squadMembers)
+				for _, squadMember := range squadMembers {
+					people[squadMember].Squad = ldapSquad.GetAttributeValue("description")
+				}
+				group.Members = append(group.Members, squadMembers...)
 			}
 		}
 
@@ -133,9 +203,16 @@ func fillGroups(ldapc Connection) {
 				switch people[member].Role {
 				case "rhos-pm":
 					group.PMs = append(group.PMs, *people[member])
-				case "rhos-stewards-em":
-				case "rhos-stewards-qe":
+				case "rhos-stewards-qe": // TODO: obsolete
+					fallthrough
+				case "rhos-stewards-em": // TODO: obsolete
+					fallthrough
+				case "rhos-stewards":
 					group.Stewards = append(group.Stewards, *people[member])
+				case "rhos-ua":
+					group.UAs = append(group.UAs, *people[member])
+				case "rhos-tc":
+					group.TCs = append(group.TCs, *people[member])
 				}
 			}
 		}
@@ -145,15 +222,20 @@ func fillGroups(ldapc Connection) {
 }
 
 // GetMembers - tbd
-func GetMembers(ldapc Connection, group string) []Member {
+func GetMembers(ldapc Connection, group string) map[string]*Member {
+	var groupMembers = map[string]*Member{}
 
 	for _, grp := range groups {
 		if grp.Name == group {
-			return grp.PMs
+			fillMembers(ldapc, grp.Members)
+			for _, member := range grp.Members {
+				groupMembers[member] = people[member]
+			}
+			return groupMembers
 		}
 	}
 
-	return []Member{}
+	return nil
 }
 
 // GetGroups - tbd
