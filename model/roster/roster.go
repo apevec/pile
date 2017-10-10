@@ -151,6 +151,9 @@ func fillMembers(ldapc Connection, members []string) {
 
 		people[uid].IRC = ldapMember.GetAttributeValue("rhatNickName")
 		people[uid].Location = ldapMember.GetAttributeValue("co")
+		if people[uid].Role == "" {
+			people[uid].Role = "Engineer"
+		}
 	}
 }
 
