@@ -45,6 +45,19 @@ type Connection interface {
 	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
 }
 
+func removeDuplicates(xs *[]string) {
+	found := make(map[string]bool)
+	j := 0
+	for i, x := range *xs {
+		if !found[x] {
+			found[x] = true
+			(*xs)[j] = (*xs)[i]
+			j++
+		}
+	}
+	*xs = (*xs)[:j]
+}
+
 // decodeNote - returns kv
 func decodeNote(note string) map[string]string {
 	result := make(map[string]string)
@@ -218,6 +231,7 @@ func fillGroups(ldapc Connection) {
 					people[squadMember].Squad = ldapSquad.GetAttributeValue("description")
 				}
 				group.Members = append(group.Members, squadMembers...)
+				removeDuplicates(&group.Members)
 			}
 		}
 
