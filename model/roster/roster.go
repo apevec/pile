@@ -16,7 +16,7 @@ type Member struct {
 	Role      string
 	Squad     string
 	Component string
-	External  string
+	External  map[string]string
 	IRC       string
 	Location  string
 }
@@ -81,7 +81,22 @@ func fillRoles(ldapc Connection) {
 			}
 			people[person] = &Member{}
 			people[person].UID = person
-			people[person].Role = role
+			switch role {
+			case "rhos-pm":
+				people[person].Role = "Product Manager"
+			case "rhos-ua":
+				people[person].Role = "User Advocate"
+			case "rhos-tc":
+				people[person].Role = "Team Catalyst"
+			case "rhos-stewards-em":
+				fallthrough
+			case "rhos-stewards-qe":
+				fallthrough
+			case "rhos-stewards":
+				people[person].Role = "Steward"
+			default:
+				people[person].Role = "Engineer"
+			}
 		}
 
 		fillMembers(ldapc, members)
@@ -124,8 +139,16 @@ func fillMembers(ldapc Connection, members []string) {
 		people[uid].Name = ldapMember.GetAttributeValue("cn")
 
 		kv := decodeNote(ldapMember.GetAttributeValue("rhatBio"))
-		people[uid].Component = kv["components"]
-		people[uid].External = kv["gtalk"]
+		people[uid].External = make(map[string]string)
+		for k, v := range kv {
+			switch k {
+			case "components":
+				people[uid].Component = v
+			case "gtalk":
+				people[uid].External[strings.Title(k)] = v
+			}
+		}
+
 		people[uid].IRC = ldapMember.GetAttributeValue("rhatNickName")
 		people[uid].Location = ldapMember.GetAttributeValue("co")
 	}
@@ -201,17 +224,13 @@ func fillGroups(ldapc Connection) {
 		for _, member := range ldapGroup.GetAttributeValues("memberUid") {
 			if _, ok := people[member]; ok {
 				switch people[member].Role {
-				case "rhos-pm":
+				case "Product Manager":
 					group.PMs = append(group.PMs, *people[member])
-				case "rhos-stewards-qe": // TODO: obsolete
-					fallthrough
-				case "rhos-stewards-em": // TODO: obsolete
-					fallthrough
-				case "rhos-stewards":
+				case "Steward":
 					group.Stewards = append(group.Stewards, *people[member])
-				case "rhos-ua":
+				case "User Advocate":
 					group.UAs = append(group.UAs, *people[member])
-				case "rhos-tc":
+				case "Team Catalyst":
 					group.TCs = append(group.TCs, *people[member])
 				}
 			}

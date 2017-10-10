@@ -103,7 +103,16 @@
 				<td>${member.Squad}</td>
 				<td>${member.Component}</td>
 				<td>${member.IRC}</td>
-				<td>${member.External}</td>
+				<td>
+					<span v-for="(link, name) in member.External">
+						<div v-if="name == 'Gtalk'">
+						<i class="fa fa-google" title="Hangouts"></i> ${link}
+						</div>
+						<div v-else>
+						<i class="fa fa-question"></i> ${link}
+						</div>
+					</span>
+				</td>
 				<td>${member.Location}</td>
 			</tr>
 		</tbody>
