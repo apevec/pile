@@ -82,7 +82,7 @@
 			</tbody>
 		</table>
 		<keep-alive>
-			<component v-if="active == dfg.Name" :is="current"></component>
+			<component v-if="active == dfg.Name" :squads="dfg.SquadsSz" :is="current"></component>
 		</keep-alive>
 
 	</div>
@@ -94,7 +94,7 @@
 			<tr>
 				<th>Full Name</th>
 				<th>Role</th>
-				<th>Squad</th>
+				<th v-if="squads > 0">Squad</th>
 				<th>Component</th>
 				<th>IRC</th>
 				<th>External</th>
@@ -108,7 +108,7 @@
 					<span v-if="member.Role == 'rhos-pm'" class="label label-danger">PM</span>
 					<span v-else>${member.Role}</span>
 				</td>
-				<td>${member.Squad}</td>
+				<td v-if="squads > 0">${member.Squad}</td>
 				<td>${member.Component}</td>
 				<td>${member.IRC}</td>
 				<td>
@@ -131,6 +131,7 @@
 	Vue.component('groupDetails', {
 		delimiters: ['${', '}'],
 		template: "#details",
+		props: ['squads'],
 		data: function () {
 			return {
 				 members: []
