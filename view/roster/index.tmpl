@@ -6,7 +6,9 @@
 {{define "content"}}
 <div id="roster">
 	<div class="page-header cloud">
-		<a v-for="dfg in groups" v-bind:href="'#' + dfg.Name">[ ${dfg.Desc} ]</a>
+		<span v-for="dfg in groups">
+			[ <a :href="'#' + dfg.Name">${dfg.Desc}</a> ]
+		</span>
 	</div>
 
 	<div v-for="dfg in groups" class="panel panel-default">
@@ -57,6 +59,11 @@
 						<div v-if="dfg.TCs">
 							<strong>Team Catalyst:</strong>
 							<a v-for="TC in dfg.TCs" :href="'https://rover.redhat.com/people/profile/' + TC.UID + '/'"> ${TC.Name}</a>
+						</div>
+						<div v-if="dfg.SquadLeads">
+							<strong v-if="dfg.SquadLeads.length >1">Squad Leads: </strong>
+							<strong v-else>Squad Lead: </strong>
+							<a v-for="SL in dfg.SquadLeads" :href="'https://rover.redhat.com/people/profile/' + SL.UID + '/'"> ${SL.Name}</a>
 						</div>
 					</div>
 				</div>

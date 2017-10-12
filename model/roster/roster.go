@@ -23,18 +23,19 @@ type Member struct {
 
 // Group defines the DFG model.
 type Group struct {
-	Name     string
-	Desc     string
-	Members  []string
-	Backlog  string
-	Mission  string
-	Links    map[string]string
-	PMs      []Member
-	Stewards []Member
-	UAs      []Member
-	TCs      []Member
-	Squads   map[string]string
-	SquadsSz int
+	Name       string
+	Desc       string
+	Members    []string
+	Backlog    string
+	Mission    string
+	Links      map[string]string
+	PMs        []Member
+	Stewards   []Member
+	UAs        []Member
+	TCs        []Member
+	SquadLeads []Member
+	Squads     map[string]string
+	SquadsSz   int
 }
 
 var groups []Group
@@ -94,6 +95,13 @@ func fillRoles(ldapc Connection) {
 			}
 			people[person] = &Member{}
 			people[person].UID = person
+
+			// TODO: remove
+			if person == "aarapov" {
+				people[person].Role = "Steward"
+				continue
+			}
+
 			switch role {
 			case "rhos-pm":
 				people[person].Role = "Product Manager"
@@ -107,6 +115,8 @@ func fillRoles(ldapc Connection) {
 				fallthrough
 			case "rhos-stewards":
 				people[person].Role = "Steward"
+			case "rhos-squad-lead":
+				people[person].Role = "Squad Lead"
 			default:
 				people[person].Role = "Engineer"
 			}
@@ -212,7 +222,6 @@ func fillGroups(ldapc Connection) {
 				}
 			}
 		}
-		group.Members = ldapGroup.GetAttributeValues("memberUid")
 
 		// Check whether Group has Squads
 		// TODO: don't call this ldap search for every group
@@ -227,32 +236,50 @@ func fillGroups(ldapc Connection) {
 				// TODO: here we want to decode notes for squad specific details
 				squadMembers := ldapSquad.GetAttributeValues("memberUid")
 				fillMembers(ldapc, squadMembers)
-				for _, squadMember := range squadMembers {
+				for i, squadMember := range squadMembers {
+					// TODO: remove
+					if squadMember == "aarapov" {
+						squadMembers = append(squadMembers[:i], squadMembers[i+1:]...)
+						continue
+					}
 					people[squadMember].Squad = ldapSquad.GetAttributeValue("description")
 				}
+
 				group.Members = append(group.Members, squadMembers...)
 				removeDuplicates(&group.Members)
 			}
 		}
 
-		group.Name = ldapGroup.GetAttributeValue("cn")
+		group.Name = name
 		group.Desc = ldapGroup.GetAttributeValue("description")
 
-		for _, member := range ldapGroup.GetAttributeValues("memberUid") {
-			if _, ok := people[member]; ok {
-				switch people[member].Role {
-				case "Product Manager":
-					group.PMs = append(group.PMs, *people[member])
-				case "Steward":
-					group.Stewards = append(group.Stewards, *people[member])
-				case "User Advocate":
-					group.UAs = append(group.UAs, *people[member])
-				case "Team Catalyst":
-					group.TCs = append(group.TCs, *people[member])
+		groupMembers := ldapGroup.GetAttributeValues("memberUid")
+		for i, groupMember := range groupMembers {
+			if (name != "rhos-dfg-cloud-applications") && (name != "rhos-dfg-portfolio-integration") {
+				if groupMember == "aarapov" {
+					groupMembers = append(groupMembers[:i], groupMembers[i+1:]...)
+					break
 				}
 			}
 		}
 
+		for _, groupMember := range groupMembers {
+			if _, ok := people[groupMember]; ok {
+				switch people[groupMember].Role {
+				case "Product Manager":
+					group.PMs = append(group.PMs, *people[groupMember])
+				case "Steward":
+					group.Stewards = append(group.Stewards, *people[groupMember])
+				case "User Advocate":
+					group.UAs = append(group.UAs, *people[groupMember])
+				case "Team Catalyst":
+					group.TCs = append(group.TCs, *people[groupMember])
+				case "Squad Lead":
+					group.SquadLeads = append(group.SquadLeads, *people[groupMember])
+				}
+			}
+		}
+		group.Members = append(group.Members, groupMembers...)
 		groups = append(groups, group)
 	}
 }
