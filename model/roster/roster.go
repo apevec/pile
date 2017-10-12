@@ -19,6 +19,7 @@ type Member struct {
 	External  map[string]string
 	IRC       string
 	Location  string
+	CC        string
 }
 
 // Group defines the DFG model.
@@ -176,12 +177,9 @@ func fillMembers(ldapc Connection, members []string) {
 
 		people[uid].IRC = ldapMember.GetAttributeValue("rhatNickName")
 		people[uid].Location = ldapMember.GetAttributeValue("co")
+		people[uid].CC = ldapMember.GetAttributeValue("rhatCostCenter")
 		if people[uid].Role == "" {
 			people[uid].Role = "Engineer"
-		}
-		cc := ldapMember.GetAttributeValue("rhatCostCenter")
-		if cc == "667" {
-			people[uid].Role += " [QE]"
 		}
 	}
 }
@@ -286,6 +284,7 @@ func fillGroups(ldapc Connection) {
 			}
 		}
 		group.Members = append(group.Members, groupMembers...)
+		removeDuplicates(&group.Members)
 		groups = append(groups, group)
 	}
 }

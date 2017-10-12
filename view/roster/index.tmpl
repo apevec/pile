@@ -104,10 +104,7 @@
 		<tbody>
 			<tr v-for="member in members">
 				<td><a :href="'https://rover.redhat.com/people/profile/' + member.UID + '/'">${member.Name}</a></td>
-				<td>
-					<span v-if="member.Role == 'rhos-pm'" class="label label-danger">PM</span>
-					<span v-else>${member.Role}</span>
-				</td>
+				<td>${member.Role} <span v-if="member.CC == '667'">(QE)</span></td>
 				<td v-if="squads > 0">${member.Squad}</td>
 				<td>${member.Component}</td>
 				<td>${member.IRC}</td>
