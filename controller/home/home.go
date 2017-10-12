@@ -54,10 +54,6 @@ func Clone(w http.ResponseWriter, r *http.Request) {
 func Index(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 
-	if !exists(directory) {
-		c.Redirect(uri + "/create")
-	}
-
 	output := gitwiki.GetPage()
 
 	v := c.View.New("home/index")

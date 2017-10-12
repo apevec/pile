@@ -2,6 +2,7 @@
 {{define "head"}}
 	{{JS "/static/js/vue.min.js"}}
 	{{JS "/static/js/vue-resource.min.js"}}
+	{{JS "/static/js/jquery.dataTables.min.js"}}
 {{end}}
 {{define "content"}}
 <div id="roster">
@@ -88,7 +89,7 @@
 </div>
 
 <template id="details">
-	<table class="table table-striped table-hover">
+	<table id="datatable" class="table table-striped table-hover">
 		<thead>
 			<tr>
 				<th>Full Name</th>
@@ -139,6 +140,9 @@
 			this.$http.get('/roster/v1/members/'+this.$parent.active).then(function(response) {
 				this.members = response.body
 			})
+		},
+		updated: function() {
+			$('#datatable').DataTable({searching: false, paging: false, info: false, 'sDom': 't'});
 		}
 	})
 
