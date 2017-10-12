@@ -38,8 +38,10 @@ type Group struct {
 	SquadsSz   int
 }
 
-var groups []Group
-var people = map[string]*Member{}
+var (
+	groups []Group
+	people = map[string]*Member{}
+)
 
 // Connection is an interface for making queries.
 type Connection interface {
@@ -147,7 +149,7 @@ func fillMembers(ldapc Connection, members []string) {
 		"ou=users,dc=redhat,dc=com",
 		ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
 		filter, // The filter to apply
-		[]string{"uid", "cn", "co", "rhatBio", "rhatNickName"},
+		[]string{"uid", "cn", "co", "rhatBio", "rhatNickName", "rhatCostCenter"},
 		nil,
 	)
 
@@ -176,6 +178,10 @@ func fillMembers(ldapc Connection, members []string) {
 		people[uid].Location = ldapMember.GetAttributeValue("co")
 		if people[uid].Role == "" {
 			people[uid].Role = "Engineer"
+		}
+		cc := ldapMember.GetAttributeValue("rhatCostCenter")
+		if cc == "667" {
+			people[uid].Role += " [QE]"
 		}
 	}
 }
