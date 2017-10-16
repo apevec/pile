@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/arapov/pile/lib/env"
+	"github.com/arapov/pile/lib/ldapx"
 
 	"github.com/blue-jay/core/flash"
 	"github.com/blue-jay/core/form"
@@ -16,13 +17,12 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
-	"gopkg.in/ldap.v2"
 )
 
 var (
 	configInfo env.Info
 	dbInfo     *sqlx.DB
-	ldapInfo   *ldap.Conn
+	ldapInfo   *ldapx.Conn
 
 	mutex sync.RWMutex
 )
@@ -44,7 +44,7 @@ func StoreDB(db *sqlx.DB) {
 }
 
 // stores the ldap connection
-func StoreLDAP(ldapc *ldap.Conn) {
+func StoreLDAP(ldapc *ldapx.Conn) {
 	mutex.Lock()
 	ldapInfo = ldapc
 	mutex.Unlock()
@@ -59,7 +59,7 @@ type Info struct {
 	R      *http.Request
 	View   view.Info
 	DB     *sqlx.DB
-	LDAP   *ldap.Conn
+	LDAP   *ldapx.Conn
 }
 
 // Context returns the application settings.
@@ -96,7 +96,7 @@ func Reset() {
 	mutex.Lock()
 	configInfo = env.Info{}
 	dbInfo = &sqlx.DB{}
-	ldapInfo = &ldap.Conn{}
+	ldapInfo = &ldapx.Conn{}
 	mutex.Unlock()
 }
 

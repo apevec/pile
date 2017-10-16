@@ -39,14 +39,33 @@ type Group struct {
 	SquadsSz   int
 }
 
+type Group2 struct {
+	Name    string
+	Members []string
+
+	Links map[string]string
+}
+
+type Role struct {
+	Name    string
+	Members []string
+}
+
 var (
 	groups []Group
 	people = map[string]*Member{}
+
+	groups2 = map[string]*Group{}
+	roles   = map[string]*Role{}
 )
 
 // Connection is an interface for making queries.
 type Connection interface {
 	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
+	GetGroup(group string) (*ldap.Entry, error)
+	GetGroups(groups ...string) ([]*ldap.Entry, error)
+	GetAllGroups() ([]*ldap.Entry, error)
+	GetAllSquads(group string) ([]*ldap.Entry, error)
 }
 
 func removeDuplicates(xs *[]string) {
@@ -185,28 +204,13 @@ func fillMembers(ldapc Connection, members []string) {
 }
 
 func fillGroups(ldapc Connection) {
-	sGroupRequest := ldap.NewSearchRequest(
-		"ou=adhoc,ou=managedGroups,dc=redhat,dc=com",
-		ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
-		"(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))(!(cn=rhos-*lt*))))",
-		[]string{"cn", "description", "memberUid", "rhatGroupNotes"},
-		nil,
-	)
 
-	ldapGroups, _ := ldapc.Search(sGroupRequest)
+	ldapGroups, _ := ldapc.GetAllGroups()
 	// TODO: check for err
 
-	for _, ldapGroup := range ldapGroups.Entries {
+	for _, ldapGroup := range ldapGroups {
 		group := Group{}
 		name := ldapGroup.GetAttributeValue("cn")
-
-		sSquadRequest := ldap.NewSearchRequest(
-			"ou=adhoc,ou=managedGroups,dc=redhat,dc=com",
-			ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
-			fmt.Sprintf("(&(objectClass=rhatGroup)(cn=%s-*))", name),
-			[]string{"cn", "description", "memberUid", "rhatGroupNotes"},
-			nil,
-		)
 
 		// rhatGroupNotes is in plain text as of 10/06
 		// syntax: pile:[keyword]=[value]
@@ -229,12 +233,12 @@ func fillGroups(ldapc Connection) {
 
 		// Check whether Group has Squads
 		// TODO: don't call this ldap search for every group
-		ldapSquads, _ := ldapc.Search(sSquadRequest)
+		ldapSquads, _ := ldapc.GetAllSquads(name)
 		// TODO: check for err
-		if len(ldapSquads.Entries) > 0 {
+		if len(ldapSquads) > 0 {
 			group.Squads = make(map[string]string)
 			group.SquadsSz = 0
-			for _, ldapSquad := range ldapSquads.Entries {
+			for _, ldapSquad := range ldapSquads {
 				group.Squads[ldapSquad.GetAttributeValue("cn")] = ldapSquad.GetAttributeValue("description")
 				group.SquadsSz++
 				// TODO: here we want to decode notes for squad specific details
