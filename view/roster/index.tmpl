@@ -28,7 +28,7 @@
 					<div class="col-md-2">
 						<div v-for="(link, name) in group.Links">
 							<i v-if="name == 'Backlog'" class="fa fa-tasks"></i>
-							<i v-else-if="name == 'Mission'" class="fa fa-tasks"></i>
+							<i v-else-if="name == 'Mission'" class="fa fa-bullseye"></i>
 							<i v-else class="fa fa-link"></i>
 							<a :href="link">${name}</a>
 						</div>
