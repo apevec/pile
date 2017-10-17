@@ -24,7 +24,8 @@ type Group struct {
 	Name   string
 	Links  map[string]string
 	Head   map[string][]map[string]string
-	Squads bool
+	Squads int
+	Size   int
 
 	members []string
 }
@@ -35,8 +36,7 @@ type Role struct {
 }
 
 var (
-	groups  = map[string]*Group{}
-	members = map[string]*Member{}
+	groups = map[string]*Group{}
 
 	mapMemberRole  = map[string]*Role{}
 	mapMemberName  = make(map[string]string)
@@ -131,7 +131,7 @@ func GetGroups(ldapc Connection) (map[string]*Group, error) {
 		members := ldapGroup.GetAttributeValues("memberUid")
 		links := decodeNote(ldapGroup.GetAttributeValue("rhatGroupNotes"))
 		head := make(map[string][]map[string]string) // head["role"][...]["ID"] = uid
-		squads := false
+		squads := 0
 
 		for _, member := range members {
 			if _, ok := mapMemberRole[member]; !ok {
@@ -152,7 +152,7 @@ func GetGroups(ldapc Connection) (map[string]*Group, error) {
 			return nil, err
 		}
 		for _, ldapSquad := range ldapSquads {
-			squads = true
+			squads++
 			squad := ldapSquad.GetAttributeValue("description")
 			membersSquad := ldapSquad.GetAttributeValues("memberUid")
 			for _, member := range membersSquad {
@@ -168,6 +168,7 @@ func GetGroups(ldapc Connection) (map[string]*Group, error) {
 			Links:   links,
 			Head:    head,
 			Squads:  squads,
+			Size:    len(members),
 			members: members,
 		}
 	}
@@ -176,6 +177,7 @@ func GetGroups(ldapc Connection) (map[string]*Group, error) {
 }
 
 func GetMembers(ldapc Connection, group string) (map[string]*Member, error) {
+	var members = map[string]*Member{}
 
 	ldapMembers, err := ldapc.GetMembersFull(groups[group].members)
 	if err != nil {

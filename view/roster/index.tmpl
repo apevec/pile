@@ -16,8 +16,8 @@
 		<div class="panel-heading" :id="gid">
 			<h2 class="panel-title">${group.Name}
 				<span class="pull-right">
-					<!-- span v-if="dfg.Squads" title="Squads"><i class="fa fa-users"></i> ${dfg.SquadsSz}</span -->
-					<!-- span title="People"><i class="fa fa-user-circle-o"></i> ${dfg.Members.length}</span -->
+					<span v-if="group.Squads" title="Squads"><i class="fa fa-users"></i> ${group.Squads}</span>
+					<span title="People"><i class="fa fa-user-circle-o"></i> ${group.Size}</span>
 				</span>
 			</h2>
 		</div>
