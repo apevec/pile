@@ -231,3 +231,18 @@ func GetMembers(ldapc Connection, group string) (map[string]*Member, error) {
 
 	return members, err
 }
+
+func Ping(ldapc Connection) (map[string]string, error) {
+	ldapMe, err := ldapc.GetMembersTiny([]string{"aarapov"})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	pong := map[string]string{
+		"uid":  ldapMe[0].GetAttributeValue("uid"),
+		"name": ldapMe[0].GetAttributeValue("cn"),
+	}
+
+	return pong, err
+}

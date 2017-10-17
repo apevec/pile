@@ -57,6 +57,10 @@ type Conn struct {
 }
 
 func (c Info) Dial() (*Conn, error) {
+	// TODO: every minute calls of uri/ping is keeping pile connected to ldap
+	// in openshift. Disconects were not observed when run on local machine.
+	// - It may need ReDial() function...
+
 	parentConn, err := ldap.Dial("tcp", fmt.Sprintf("%s:%d", c.Hostname, c.Port))
 	return &Conn{parentConn}, err
 }
