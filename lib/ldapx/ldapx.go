@@ -9,17 +9,40 @@ import (
 )
 
 var (
+	// TODO: get some/all of those to configuration
 	basednGroups  = "ou=adhoc,ou=managedGroups,dc=redhat,dc=com"
 	basednMembers = "ou=users,dc=redhat,dc=com"
 
 	ldapAttrGroup = []string{
 		"cn",             // group id
-		"description",    // group description
+		"description",    // description
 		"memberUid",      // []members
-		"rhatGroupNotes", // group notes
+		"rhatGroupNotes", // notes
+	}
+	ldapAttrMemberFull = []string{
+		"uid",            // uid
+		"cn",             // fullname
+		"co",             // country
+		"rhatBio",        // notes/bio
+		"rhatNickName",   // irc nick
+		"rhatCostCenter", // cost center
 	}
 	ldapAttrMember = []string{
-		"cn", // idk
+		"uid", // uid
+		"cn",  // fullname
+	}
+	ldapAttrRoles = []string{
+		"cn",          // roles id
+		"description", // description
+		"memberUid",   // []members
+	}
+	// ldapRolesMap - keys are the role groups in ldap
+	ldapRolesMap = map[string]string{
+		"rhos-pm":         "Product Management",
+		"rhos-steward":    "Steward",
+		"rhos-ua":         "User Advocate",
+		"rhos-tc":         "Team Catalyst",
+		"rhos-squad-lead": "Squad Lead",
 	}
 )
 
@@ -34,7 +57,6 @@ type Conn struct {
 }
 
 func (c Info) Dial() (*Conn, error) {
-	//return ldapx.Dial("tcp", fmt.Sprintf("%s:%d", c.Hostname, c.Port))
 	parentConn, err := ldap.Dial("tcp", fmt.Sprintf("%s:%d", c.Hostname, c.Port))
 	return &Conn{parentConn}, err
 }
@@ -85,6 +107,10 @@ func (c *Conn) GetAllGroups() ([]*ldap.Entry, error) {
 	return c.GetGroups()
 }
 
+func (c *Conn) GetSquad(squad string) (*ldap.Entry, error) {
+	return c.GetGroup(squad)
+}
+
 func (c *Conn) GetAllSquads(group string) ([]*ldap.Entry, error) {
 	var filter string
 
@@ -94,4 +120,43 @@ func (c *Conn) GetAllSquads(group string) ([]*ldap.Entry, error) {
 	return c.query(basednGroups, ldapAttrGroup, filter)
 }
 
-//func GetSquads(ldapc *ldap.Conn)
+func (c *Conn) GetRoles(roles ...string) ([]*ldap.Entry, error) {
+	var filter string
+
+	// "(&(objectClass=rhatGroup)(|(cn=rhos-role1)(cn=rhos-role2)))"
+	filter = "(&(objectClass=rhatGroup)(|"
+	for ldapRoleGroup := range ldapRolesMap {
+		filter = filter + fmt.Sprintf("(cn=%s)", ldapRoleGroup)
+	}
+	filter = filter + "))"
+
+	return c.query(basednGroups, ldapAttrRoles, filter)
+}
+
+func (c *Conn) GetAllRoles() ([]*ldap.Entry, error) {
+	return c.GetRoles()
+}
+
+func (c *Conn) GetMembers(ids []string, full bool) ([]*ldap.Entry, error) {
+	var filter string
+
+	// "(&(objectClass=rhatPerson)(|(uid=user1)(uid=user2)(uid=user3)))"
+	filter = "(&(objectClass=rhatPerson)(|"
+	for _, id := range ids {
+		filter = filter + fmt.Sprintf("(uid=%s)", id)
+	}
+	filter = filter + "))"
+
+	if full {
+		return c.query(basednMembers, ldapAttrMemberFull, filter)
+	}
+	return c.query(basednMembers, ldapAttrMember, filter)
+}
+
+func (c *Conn) GetMembersTiny(ids []string) ([]*ldap.Entry, error) {
+	return c.GetMembers(ids, false)
+}
+
+func (c *Conn) GetMembersFull(ids []string) ([]*ldap.Entry, error) {
+	return c.GetMembers(ids, true)
+}

@@ -4,8 +4,6 @@ package roster
 import (
 	"encoding/json"
 	"net/http"
-	"sort"
-	"strings"
 
 	"github.com/arapov/pile/lib/flight"
 	"github.com/arapov/pile/model/roster"
@@ -21,7 +19,7 @@ var (
 func Load() {
 	//c := router.Chain(acl.DisallowAnon)
 	router.Get(uri, Index) //, c...)
-	router.Get(uri+"/v1/groups", Get)
+	router.Get(uri+"/v1/groups", GetGroups)
 	router.Get(uri+"/v1/members/:group", GetMembers)
 }
 
@@ -37,31 +35,19 @@ func GetMembers(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
-	// TODO: check whether any param is passed at all
 	group := c.Param("group")
-	ppl := roster.GetMembers(c.LDAP, group)
-	js, _ := json.Marshal(ppl)
+	members, _ := roster.GetMembers(c.LDAP, group)
+	js, _ := json.Marshal(members)
+
 	w.Write(js)
 }
 
-// Get some
-func Get(w http.ResponseWriter, r *http.Request) {
+func GetGroups(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
-	dfgs := roster.GetGroups(c.LDAP)
-	// Sort dfgs by dfgs.Name
-	sort.Slice(dfgs, func(i, j int) bool {
-		switch strings.Compare(dfgs[i].Desc, dfgs[j].Desc) {
-		case -1:
-			return true
-		case 1:
-			return false
-		}
-		return dfgs[i].Desc > dfgs[j].Desc
-	})
-	js, _ := json.Marshal(dfgs)
-	// TODO: check for errors
+	groups, _ := roster.GetGroups(c.LDAP)
+	js, _ := json.Marshal(groups)
 
 	w.Write(js)
 }

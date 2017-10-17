@@ -2,7 +2,7 @@
 package roster
 
 import (
-	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -11,61 +11,69 @@ import (
 
 // Member - tbd
 type Member struct {
-	UID       string
-	Name      string
-	Role      string
-	Squad     string
-	Component string
-	External  map[string]string
-	IRC       string
-	Location  string
-	CC        string
+	Name     string
+	Role     string
+	Squad    string
+	Data     map[string]string
+	IRC      string
+	Location string
+	CC       string
 }
 
-// Group defines the DFG model.
 type Group struct {
-	Name       string
-	Desc       string
-	Members    []string
-	Backlog    string
-	Mission    string
-	Links      map[string]string
-	PMs        []Member
-	Stewards   []Member
-	UAs        []Member
-	TCs        []Member
-	SquadLeads []Member
-	Squads     map[string]string
-	SquadsSz   int
-}
+	Name   string
+	Links  map[string]string
+	Head   map[string][]map[string]string
+	Squads bool
 
-type Group2 struct {
-	Name    string
-	Members []string
-
-	Links map[string]string
+	members []string
 }
 
 type Role struct {
-	Name    string
-	Members []string
+	Name string
+	Desc string
 }
 
 var (
-	groups []Group
-	people = map[string]*Member{}
+	groups  = map[string]*Group{}
+	members = map[string]*Member{}
 
-	groups2 = map[string]*Group{}
-	roles   = map[string]*Role{}
+	mapMemberRole  = map[string]*Role{}
+	mapMemberName  = make(map[string]string)
+	mapMemberSquad = make(map[string]string)
 )
 
 // Connection is an interface for making queries.
 type Connection interface {
 	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
-	GetGroup(group string) (*ldap.Entry, error)
-	GetGroups(groups ...string) ([]*ldap.Entry, error)
+
+	//GetGroup(group string) (*ldap.Entry, error)
+	//GetGroups(groups ...string) ([]*ldap.Entry, error)
 	GetAllGroups() ([]*ldap.Entry, error)
+
 	GetAllSquads(group string) ([]*ldap.Entry, error)
+
+	//GetRoles(roles ...string) ([]*ldap.Entry, error)
+	GetAllRoles() ([]*ldap.Entry, error)
+
+	GetMembersTiny(ids []string) ([]*ldap.Entry, error)
+	GetMembersFull(ids []string) ([]*ldap.Entry, error)
+}
+
+// decodeNote - returns kv
+func decodeNote(note string) map[string]string {
+	result := make(map[string]string)
+
+	re, _ := regexp.Compile(`pile:(\w*=[a-zA-z0-9:/.@-]+)`)
+	// TODO: take care of error here
+	pile := re.FindAllStringSubmatch(note, -1)
+	// TODO: code below is fragile, very fragile
+	for i := range pile {
+		kv := strings.Split(pile[i][1], "=")
+		result[strings.Title(kv[0])] = kv[1]
+	}
+
+	return result
 }
 
 func removeDuplicates(xs *[]string) {
@@ -81,242 +89,128 @@ func removeDuplicates(xs *[]string) {
 	*xs = (*xs)[:j]
 }
 
-// decodeNote - returns kv
-func decodeNote(note string) map[string]string {
-	result := make(map[string]string)
+func GetGroups(ldapc Connection) (map[string]*Group, error) {
+	var allmembers []string
 
-	re, _ := regexp.Compile(`pile:(\w*=[a-zA-z0-9:/.@-]+)`)
-	// TODO: take care of error here
-	pile := re.FindAllStringSubmatch(note, -1)
-	// TODO: code below is fragile, very fragile
-	for i := range pile {
-		kv := strings.Split(pile[i][1], "=")
-		result[kv[0]] = kv[1]
+	ldapRoles, err := ldapc.GetAllRoles()
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	for _, ldapRole := range ldapRoles {
+		id := ldapRole.GetAttributeValue("cn")
+		desc := ldapRole.GetAttributeValue("description")
+		members := ldapRole.GetAttributeValues("memberUid")
+
+		for _, member := range members {
+			mapMemberRole[member] = &Role{id, desc}
+		}
+		allmembers = append(allmembers, members...)
+		removeDuplicates(&allmembers)
 	}
 
-	return result
-}
-
-func fillRoles(ldapc Connection) {
-	sRolesRequest := ldap.NewSearchRequest(
-		"ou=adhoc,ou=managedGroups,dc=redhat,dc=com",
-		ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
-		"(&(objectClass=rhatGroup)(|(cn=rhos-ua)(cn=rhos-pm)(cn=rhos-tc)(cn=rhos-stewards-em)(cn=rhos-stewards-qe)(cn=rhos-squad-lead)))",
-		[]string{"cn", "memberUid"},
-		nil,
-	)
-	ldapRolesPeople, _ := ldapc.Search(sRolesRequest)
-	// TODO: check for err
-
-	for _, rolesPeople := range ldapRolesPeople.Entries {
-		role := rolesPeople.GetAttributeValue("cn")
-		members := rolesPeople.GetAttributeValues("memberUid")
-		for _, person := range members {
-			if _, ok := people[person]; !ok {
-				people[person] = &Member{}
-			}
-			people[person] = &Member{}
-			people[person].UID = person
-
-			// TODO: remove
-			if person == "aarapov" {
-				people[person].Role = "Steward"
-				continue
-			}
-
-			switch role {
-			case "rhos-pm":
-				people[person].Role = "Product Manager"
-			case "rhos-ua":
-				people[person].Role = "User Advocate"
-			case "rhos-tc":
-				people[person].Role = "Team Catalyst"
-			case "rhos-stewards-em":
-				fallthrough
-			case "rhos-stewards-qe":
-				fallthrough
-			case "rhos-stewards":
-				people[person].Role = "Steward"
-			case "rhos-squad-lead":
-				people[person].Role = "Squad Lead"
-			default:
-				people[person].Role = "Engineer"
-			}
-		}
-
-		fillMembers(ldapc, members)
+	ldapMembers, err := ldapc.GetMembersTiny(allmembers)
+	if err != nil {
+		log.Println(err)
+		return nil, err
 	}
-}
-
-func fillMembers(ldapc Connection, members []string) {
-
-	filter := "(&(objectClass=rhatPerson)(|"
-	for _, member := range members {
-		// "(&(objectClass=rhatPerson)(|(uid=user1)(uid=user2)(uid=user3)))"
-
-		// don't do it multiple times
-		if _, ok := people[member]; ok {
-			if people[member].Name != "" {
-				continue
-			}
-		}
-
-		filter = filter + fmt.Sprintf("(uid=%s)", member)
+	for _, ldapMember := range ldapMembers {
+		id := ldapMember.GetAttributeValue("uid")
+		name := ldapMember.GetAttributeValue("cn")
+		mapMemberName[id] = name
 	}
-	filter = filter + "))"
 
-	sMembersRequest := ldap.NewSearchRequest(
-		"ou=users,dc=redhat,dc=com",
-		ldap.ScopeSingleLevel, ldap.NeverDerefAliases, 0, 0, false,
-		filter, // The filter to apply
-		[]string{"uid", "cn", "co", "rhatBio", "rhatNickName", "rhatCostCenter"},
-		nil,
-	)
-
-	ldapMembers, _ := ldapc.Search(sMembersRequest)
-	// TODO: check for err
-	for _, ldapMember := range ldapMembers.Entries {
-		uid := ldapMember.GetAttributeValue("uid")
-		if _, ok := people[uid]; !ok {
-			people[uid] = &Member{}
-		}
-
-		people[uid].Name = ldapMember.GetAttributeValue("cn")
-
-		kv := decodeNote(ldapMember.GetAttributeValue("rhatBio"))
-		people[uid].External = make(map[string]string)
-		for k, v := range kv {
-			switch k {
-			case "components":
-				people[uid].Component = v
-			case "gtalk":
-				people[uid].External[strings.Title(k)] = v
-			}
-		}
-
-		people[uid].IRC = ldapMember.GetAttributeValue("rhatNickName")
-		people[uid].Location = ldapMember.GetAttributeValue("co")
-		people[uid].CC = ldapMember.GetAttributeValue("rhatCostCenter")
-		if people[uid].Role == "" {
-			people[uid].Role = "Engineer"
-		}
+	ldapGroups, err := ldapc.GetAllGroups()
+	if err != nil {
+		log.Println(err)
+		return nil, err
 	}
-}
-
-func fillGroups(ldapc Connection) {
-
-	ldapGroups, _ := ldapc.GetAllGroups()
-	// TODO: check for err
-
 	for _, ldapGroup := range ldapGroups {
-		group := Group{}
-		name := ldapGroup.GetAttributeValue("cn")
+		id := ldapGroup.GetAttributeValue("cn")
+		desc := ldapGroup.GetAttributeValue("description")
+		members := ldapGroup.GetAttributeValues("memberUid")
+		links := decodeNote(ldapGroup.GetAttributeValue("rhatGroupNotes"))
+		head := make(map[string][]map[string]string) // head["role"][...]["ID"] = uid
+		squads := false
 
-		// rhatGroupNotes is in plain text as of 10/06
-		// syntax: pile:[keyword]=[value]
-		note := ldapGroup.GetAttributeValue("rhatGroupNotes")
-		if len(note) > 0 {
-			kv := decodeNote(note)
-			// TODO: check for keys availability
-			group.Links = make(map[string]string)
-			for k, v := range kv {
-				switch k {
-				case "backlog":
-					group.Backlog = v
-				case "mission":
-					group.Mission = v
-				default:
-					group.Links[strings.Title(k)] = v
-				}
+		for _, member := range members {
+			if _, ok := mapMemberRole[member]; !ok {
+				continue // skip members who doesn't belong to any role
 			}
+
+			role := mapMemberRole[member].Desc
+			name := mapMemberName[member]
+			info := map[string]string{"ID": member, "Name": name}
+
+			head[role] = append(head[role], info)
 		}
 
-		// Check whether Group has Squads
-		// TODO: don't call this ldap search for every group
-		ldapSquads, _ := ldapc.GetAllSquads(name)
-		// TODO: check for err
-		if len(ldapSquads) > 0 {
-			group.Squads = make(map[string]string)
-			group.SquadsSz = 0
-			for _, ldapSquad := range ldapSquads {
-				group.Squads[ldapSquad.GetAttributeValue("cn")] = ldapSquad.GetAttributeValue("description")
-				group.SquadsSz++
-				// TODO: here we want to decode notes for squad specific details
-				squadMembers := ldapSquad.GetAttributeValues("memberUid")
-				fillMembers(ldapc, squadMembers)
-				for i, squadMember := range squadMembers {
-					// TODO: remove
-					if squadMember == "aarapov" {
-						squadMembers = append(squadMembers[:i], squadMembers[i+1:]...)
-						continue
-					}
-					people[squadMember].Squad = ldapSquad.GetAttributeValue("description")
-				}
-
-				group.Members = append(group.Members, squadMembers...)
-				removeDuplicates(&group.Members)
+		// Squads
+		ldapSquads, err := ldapc.GetAllSquads(id)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		for _, ldapSquad := range ldapSquads {
+			squads = true
+			squad := ldapSquad.GetAttributeValue("description")
+			membersSquad := ldapSquad.GetAttributeValues("memberUid")
+			for _, member := range membersSquad {
+				mapMemberSquad[member] = squad
 			}
+
+			members = append(members, membersSquad...)
+			removeDuplicates(&members)
 		}
 
-		group.Name = name
-		group.Desc = ldapGroup.GetAttributeValue("description")
-
-		groupMembers := ldapGroup.GetAttributeValues("memberUid")
-		for i, groupMember := range groupMembers {
-			if (name != "rhos-dfg-cloud-applications") && (name != "rhos-dfg-portfolio-integration") {
-				if groupMember == "aarapov" {
-					groupMembers = append(groupMembers[:i], groupMembers[i+1:]...)
-					break
-				}
-			}
+		groups[id] = &Group{
+			Name:    desc,
+			Links:   links,
+			Head:    head,
+			Squads:  squads,
+			members: members,
 		}
-
-		for _, groupMember := range groupMembers {
-			if _, ok := people[groupMember]; ok {
-				switch people[groupMember].Role {
-				case "Product Manager":
-					group.PMs = append(group.PMs, *people[groupMember])
-				case "Steward":
-					group.Stewards = append(group.Stewards, *people[groupMember])
-				case "User Advocate":
-					group.UAs = append(group.UAs, *people[groupMember])
-				case "Team Catalyst":
-					group.TCs = append(group.TCs, *people[groupMember])
-				case "Squad Lead":
-					group.SquadLeads = append(group.SquadLeads, *people[groupMember])
-				}
-			}
-		}
-		group.Members = append(group.Members, groupMembers...)
-		removeDuplicates(&group.Members)
-		groups = append(groups, group)
 	}
+
+	return groups, err
 }
 
-// GetMembers - tbd
-func GetMembers(ldapc Connection, group string) map[string]*Member {
-	var groupMembers = map[string]*Member{}
+func GetMembers(ldapc Connection, group string) (map[string]*Member, error) {
 
-	for _, grp := range groups {
-		if grp.Name == group {
-			fillMembers(ldapc, grp.Members)
-			for _, member := range grp.Members {
-				groupMembers[member] = people[member]
-			}
-			return groupMembers
+	ldapMembers, err := ldapc.GetMembersFull(groups[group].members)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	for _, ldapMember := range ldapMembers {
+		uid := ldapMember.GetAttributeValue("uid")
+		name := ldapMember.GetAttributeValue("cn")
+		data := decodeNote(ldapMember.GetAttributeValue("rhatBio"))
+		ircnick := ldapMember.GetAttributeValue("rhatNickName")
+		location := ldapMember.GetAttributeValue("co")
+		cc := ldapMember.GetAttributeValue("rhatCostCenter")
+
+		role := "Engineer"
+		if _, ok := mapMemberRole[uid]; ok {
+			role = mapMemberRole[uid].Desc
+		}
+
+		squad := ""
+		if _, ok := mapMemberSquad[uid]; ok {
+			squad = mapMemberSquad[uid]
+		}
+
+		members[uid] = &Member{
+			Name:     name,
+			Role:     role,
+			Data:     data,
+			Squad:    squad,
+			IRC:      ircnick,
+			Location: location,
+			CC:       cc,
 		}
 	}
 
-	return nil
-}
-
-// GetGroups - tbd
-func GetGroups(ldapc Connection) []Group {
-
-	if len(groups) == 0 {
-		fillRoles(ldapc)
-		fillGroups(ldapc)
-	}
-
-	return groups
+	return members, err
 }

@@ -7,64 +7,42 @@
 {{define "content"}}
 <div id="roster">
 	<div class="page-header cloud">
-		<span v-for="dfg in groups">
-			[ <a :href="'#' + dfg.Name">${dfg.Desc}</a> ]
+		<span v-for="(group, id) in groups">
+			[<a :href="'#' + id">${group.Name}</a>]
 		</span>
 	</div>
 
-	<div v-for="dfg in groups" class="panel panel-default">
-		<div class="panel-heading" :id="dfg.Name">
-			<h2 class="panel-title">${dfg.Desc}
+	<div v-for="(group, gid) in groups" class="panel panel-default">
+		<div class="panel-heading" :id="gid">
+			<h2 class="panel-title">${group.Name}
 				<span class="pull-right">
-					<span v-if="dfg.Squads" title="Squads"><i class="fa fa-users"></i> ${dfg.SquadsSz}</span>
-					<span title="People"><i class="fa fa-user-circle-o"></i> ${dfg.Members.length}</span>
+					<!-- span v-if="dfg.Squads" title="Squads"><i class="fa fa-users"></i> ${dfg.SquadsSz}</span -->
+					<!-- span title="People"><i class="fa fa-user-circle-o"></i> ${dfg.Members.length}</span -->
 				</span>
 			</h2>
 		</div>
 
 		<div class="panel-body">
 			<div class="container-fluid">
-
-				<!-- Group Core Info -->
 				<div class="row">
 					<div class="col-md-2">
-						<div v-if="dfg.Backlog">
-							<i class="fa fa-tasks"></i>
-							<a :href="dfg.Backlog">Backlog</a>
-						</div>
-						<div v-if="dfg.Mission">
-							<i class="fa fa-bullseye"></i>
-							<a :href="dfg.Mission">Mission</a>
-						</div>
-						<div v-for="(link, name) in dfg.Links">
-							<i class="fa fa-link"></i>
+						<div v-for="(link, name) in group.Links">
+							<i v-if="name == 'Backlog'" class="fa fa-tasks"></i>
+							<i v-else-if="name == 'Mission'" class="fa fa-tasks"></i>
+							<i v-else class="fa fa-link"></i>
 							<a :href="link">${name}</a>
 						</div>
 					</div>
 					<div class="col-md-5">
-						<div v-if="dfg.PMs">
-							<strong>Product Management:</strong>
-							<a v-for="PM in dfg.PMs" :href="'https://rover.redhat.com/people/profile/' + PM.UID + '/'"> ${PM.Name}</a>
-						</div>
-						<div v-if="dfg.Stewards">
-							<strong v-if="dfg.Stewards.length > 1">Stewards: </strong>
-							<strong v-else>Steward:</strong>
-							<a v-for="Steward in dfg.Stewards" :href="'https://rover.redhat.com/people/profile/' + Steward.UID + '/'"> ${Steward.Name}</a>
+						<div v-for="(role, id) in group.Head" v-if="id == 'Steward' || id == 'Product Manager'">
+							<strong>${id}<span v-if="role.length > 1">s</span>:</strong>
+							<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
 						</div>
 					</div>
 					<div class="col-md-5">
-						<div v-if="dfg.UAs">
-							<strong>User Advocate:</strong>
-							<a v-for="UA in dfg.UAs" :href="'https://rover.redhat.com/people/profile/' + UA.UID + '/'"> ${UA.Name}</a>
-						</div>
-						<div v-if="dfg.TCs">
-							<strong>Team Catalyst:</strong>
-							<a v-for="TC in dfg.TCs" :href="'https://rover.redhat.com/people/profile/' + TC.UID + '/'"> ${TC.Name}</a>
-						</div>
-						<div v-if="dfg.SquadLeads">
-							<strong v-if="dfg.SquadLeads.length >1">Squad Leads: </strong>
-							<strong v-else>Squad Lead: </strong>
-							<a v-for="SL in dfg.SquadLeads" :href="'https://rover.redhat.com/people/profile/' + SL.UID + '/'"> ${SL.Name}</a>
+						<div v-for="(role, id) in group.Head" v-if="id == 'User Advocate' || id == 'Team Catalyst' || id == 'Squad Lead'">
+							<strong>${id}<span v-if="role.length > 1">s</span>:</strong>
+							<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
 						</div>
 					</div>
 				</div>
@@ -72,19 +50,16 @@
 		</div>
 
 		<!-- Group Details -->
-		<table v-if="active != dfg.Name" class="table">
+		<table v-if="active != gid" class="table">
 			<tbody>
-				<tr>
-					<td>
-					<button v-on:click="showDetails(dfg.Name)" class="btn form-control" type="button"><i class="fa fa-ellipsis-h fa-lg"></i></button>
-					</td>
-				</tr>
+				<tr><td>
+						<button v-on:click="showDetails(gid)" class="btn form-control" type="button"><i class="fa fa-ellipsis-h fa-lg"></i></button>
+				</td></tr>
 			</tbody>
 		</table>
 		<keep-alive>
-			<component v-if="active == dfg.Name" :squads="dfg.SquadsSz" :is="current"></component>
+			<component v-if="active == gid" :squads="group.Squads" :is="current"></component>
 		</keep-alive>
-
 	</div>
 </div>
 
@@ -94,7 +69,7 @@
 			<tr>
 				<th>Full Name</th>
 				<th>Role</th>
-				<th v-if="squads > 0">Squad</th>
+				<th v-if="squads">Squad</th>
 				<th>Component</th>
 				<th>IRC</th>
 				<th>External</th>
@@ -102,20 +77,16 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr v-for="member in members">
-				<td><a :href="'https://rover.redhat.com/people/profile/' + member.UID + '/'">${member.Name}</a></td>
+			<tr v-for="(member, uid) in members">
+				<td><a :href="'https://rover.redhat.com/people/profile/' + uid + '/'">${member.Name}</a></td>
 				<td>${member.Role} <span v-if="member.CC == '667'">(QE)</span></td>
-				<td v-if="squads > 0">${member.Squad}</td>
-				<td>${member.Component}</td>
+				<td v-if="squads">${member.Squad}</td>
+				<td><span v-for="(data, name) in member.Data" v-if="name == 'Comp'">${data} </span></td>
 				<td>${member.IRC}</td>
 				<td>
-					<span v-for="(link, name) in member.External">
-						<div v-if="name == 'Gtalk'">
-						<i class="fa fa-google" title="Hangouts"></i> ${link}
-						</div>
-						<div v-else>
-						<i class="fa fa-question"></i> ${link}
-						</div>
+					<span v-for="(link, name) in member.Data">
+						<span v-if="name == 'Gtalk'"><i class="fa fa-google" title="Hangouts"></i> ${link} </span>
+						<!-- span v-if="name == 'Link'"><i class="fa fa-link" title="Link"> ${link} </i></span -->
 					</span>
 				</td>
 				<td>${member.Location}</td>
