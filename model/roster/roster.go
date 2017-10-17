@@ -45,22 +45,13 @@ var (
 
 // Connection is an interface for making queries.
 type Connection interface {
-	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
-
-	//GetGroup(group string) (*ldap.Entry, error)
-	//GetGroups(groups ...string) ([]*ldap.Entry, error)
 	GetAllGroups() ([]*ldap.Entry, error)
-
 	GetAllSquads(group string) ([]*ldap.Entry, error)
-
-	//GetRoles(roles ...string) ([]*ldap.Entry, error)
 	GetAllRoles() ([]*ldap.Entry, error)
-
 	GetMembersTiny(ids []string) ([]*ldap.Entry, error)
 	GetMembersFull(ids []string) ([]*ldap.Entry, error)
 }
 
-// decodeNote - returns kv
 func decodeNote(note string) map[string]string {
 	result := make(map[string]string)
 
@@ -89,6 +80,16 @@ func removeDuplicates(xs *[]string) {
 	*xs = (*xs)[:j]
 }
 
+func removeMe(xs *[]string) {
+	// TODO: temporary, remove aarapov
+	for i, me := range *xs {
+		if me == "aarapov" {
+			(*xs) = append((*xs)[:i], (*xs)[i+1:]...)
+			break
+		}
+	}
+}
+
 func GetGroups(ldapc Connection) (map[string]*Group, error) {
 	var allmembers []string
 
@@ -101,6 +102,11 @@ func GetGroups(ldapc Connection) (map[string]*Group, error) {
 		id := ldapRole.GetAttributeValue("cn")
 		desc := ldapRole.GetAttributeValue("description")
 		members := ldapRole.GetAttributeValues("memberUid")
+
+		// TODO: removeme
+		if id != "rhos-steward" {
+			removeMe(&members)
+		}
 
 		for _, member := range members {
 			mapMemberRole[member] = &Role{id, desc}
@@ -133,6 +139,11 @@ func GetGroups(ldapc Connection) (map[string]*Group, error) {
 		head := make(map[string][]map[string]string) // head["role"][...]["ID"] = uid
 		squads := 0
 
+		// TODO: removeme
+		if (id != "rhos-dfg-cloud-applications") && (id != "rhos-dfg-portfolio-integration") {
+			removeMe(&members)
+		}
+
 		for _, member := range members {
 			if _, ok := mapMemberRole[member]; !ok {
 				continue // skip members who doesn't belong to any role
@@ -155,6 +166,10 @@ func GetGroups(ldapc Connection) (map[string]*Group, error) {
 			squads++
 			squad := ldapSquad.GetAttributeValue("description")
 			membersSquad := ldapSquad.GetAttributeValues("memberUid")
+
+			// TODO: removeme
+			removeMe(&membersSquad)
+
 			for _, member := range membersSquad {
 				mapMemberSquad[member] = squad
 			}
