@@ -18,7 +18,6 @@ type Role struct {
 }
 
 var (
-	head          []Head
 	mapMemberRole = map[string]*Role{}
 	mapMemberName = make(map[string]string)
 )
@@ -54,6 +53,7 @@ func removeMe(xs *[]string) {
 }
 
 func GetHead(ldapc Connection) ([]Head, error) {
+	var head []Head
 	var allmembers []string
 
 	ldapRoles, err := ldapc.GetAllRoles()
