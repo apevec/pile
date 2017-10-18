@@ -96,8 +96,14 @@ func GetHead(ldapc Connection) ([]Head, error) {
 		return head, err
 	}
 	for _, ldapGroup := range ldapGroups {
+		id := ldapGroup.GetAttributeValue("cn")
 		groupName := ldapGroup.GetAttributeValue("description")
 		groupMembers := ldapGroup.GetAttributeValues("memberUid")
+
+		// TODO: removeme
+		if (id != "rhos-dfg-cloud-applications") && (id != "rhos-dfg-portfolio-integration") {
+			removeMe(&groupMembers)
+		}
 
 		for _, groupMember := range groupMembers {
 			if _, ok := mapMemberRole[groupMember]; !ok {
