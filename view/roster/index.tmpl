@@ -2,7 +2,6 @@
 {{define "head"}}
 	{{JS "/static/js/vue.min.js"}}
 	{{JS "/static/js/vue-resource.min.js"}}
-	{{JS "/static/js/jquery.dataTables.min.js"}}
 {{end}}
 {{define "content"}}
 <div id="roster">
@@ -135,6 +134,7 @@
 		}
 	});
 </script>
-	{{template "footer" .}}
-{{end}}
+
+{{JS "/static/js/jquery.dataTables.min.js"}}
+{{template "footer" .}}{{end}}
 {{define "foot"}}{{end}}
