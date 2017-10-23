@@ -20,13 +20,15 @@ var (
 		"rhatGroupNotes", // notes
 	}
 	ldapAttrMemberFull = []string{
-		"uid",               // uid
-		"cn",                // fullname
-		"co",                // country
-		"rhatBio",           // notes/bio
-		"rhatNickName",      // irc nick
-		"rhatCostCenter",    // cost center
-		"registeredAddress", // lat/lng
+		"uid",                // uid
+		"cn",                 // fullname
+		"co",                 // country
+		"rhatBio",            // notes/bio
+		"rhatNickName",       // irc nick
+		"rhatCostCenter",     // cost center
+		"rhatLocation",       // location
+		"registeredAddress",  // lat/lng
+		"rhatOfficeLocation", // describes REMOTE
 	}
 	ldapAttrMember = []string{
 		"uid", // uid

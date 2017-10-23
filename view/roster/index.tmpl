@@ -89,8 +89,9 @@
 					</span>
 				</td>
 				<td>
-					${member.Location}
-					<span v-if="member.UTC != 'n/a'" :title="member.Timezone">, UTC${member.UTC}</span>
+					<span v-if="member.Remote">Remote</span>
+					<span>${member.Country}</span>
+					<span :title="member.Timezone">, UTC${member.UTC}</span>
 				</td>
 			</tr>
 		</tbody>

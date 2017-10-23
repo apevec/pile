@@ -23,9 +23,10 @@ type Member struct {
 	Data     map[string]string
 	IRC      string
 	CC       string
-	Location string
+	Country  string
 	UTC      string
 	Timezone string
+	Remote   bool
 }
 
 type Group struct {
@@ -98,7 +99,7 @@ func removeMe(xs *[]string) {
 	}
 }
 
-func getTimeZone(latlng string, co string) (string, string) {
+func getTimeZone(latlng string, location string, remote bool) (string, string) {
 	utc := "n/a"
 	timezone := "undefined"
 
@@ -116,11 +117,15 @@ func getTimeZone(latlng string, co string) (string, string) {
 
 	var lat float64
 	var lng float64
-	if latlng == "" {
+	if remote == true {
+		locationTrim1 := strings.Replace(location, "RH -", "", 1)
+		locationTrim2 := strings.Replace(locationTrim1, "Remote ", "", 1)
+
 		// fallback, if no latitude and longitude are known
 		r := &maps.GeocodingRequest{
-			Address: co,
+			Address: locationTrim2,
 		}
+
 		loc, err := mapsc.Geocode(context.Background(), r)
 		if err != nil {
 			log.Println(err)
@@ -274,10 +279,16 @@ func GetMembers(ldapc Connection, group string) (map[string]*Member, error) {
 		data := decodeNote(ldapMember.GetAttributeValue("rhatBio"))
 		ircnick := ldapMember.GetAttributeValue("rhatNickName")
 		cc := ldapMember.GetAttributeValue("rhatCostCenter")
-		location := ldapMember.GetAttributeValue("co")
+		country := ldapMember.GetAttributeValue("co")
+
+		remote := false
+		if ldapMember.GetAttributeValue("rhatOfficeLocation") == "REMOTE" {
+			remote = true
+		}
 
 		latlng := ldapMember.GetAttributeValue("registeredAddress")
-		utc, timezone := getTimeZone(latlng, location)
+		location := ldapMember.GetAttributeValue("rhatLocation")
+		utc, timezone := getTimeZone(latlng, location, remote)
 
 		role := "Engineer"
 		if _, ok := mapMemberRole[uid]; ok {
@@ -296,9 +307,10 @@ func GetMembers(ldapc Connection, group string) (map[string]*Member, error) {
 			Squad:    squad,
 			IRC:      ircnick,
 			CC:       cc,
-			Location: location,
+			Country:  country,
 			UTC:      utc,
 			Timezone: timezone,
+			Remote:   remote,
 		}
 	}
 
