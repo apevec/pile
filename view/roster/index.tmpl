@@ -92,7 +92,8 @@
 				</td>
 				<td>
 					<span v-if="member.Remote">Remote</span>
-					<span>${member.Country} [${member.UTC}]</span>
+					<span>${member.Country}</span>
+					<span :title="member.Timezone">[${member.UTC}]</span>
 				</td>
 				<td>
 					<clock :utcoffset="member.UTC" :tzname="member.Timezone"></clock>
