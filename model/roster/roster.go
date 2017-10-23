@@ -118,12 +118,14 @@ func getTimeZone(latlng string, location string, remote bool) (string, string, e
 	var lat float64
 	var lng float64
 	if remote == true {
+		// TODO: Put some nice regexp here?
 		locationTrim1 := strings.Replace(location, "RH -", "", 1)
 		locationTrim2 := strings.Replace(locationTrim1, "Remote ", "", 1)
+		locationTrim3 := strings.Replace(locationTrim2, "US", "USA", 1)
 
 		// fallback, if no latitude and longitude are known
 		r := &maps.GeocodingRequest{
-			Address: locationTrim2,
+			Address: locationTrim3,
 		}
 
 		loc, err := mapsc.Geocode(context.Background(), r)
