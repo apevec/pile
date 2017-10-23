@@ -100,8 +100,8 @@ func removeMe(xs *[]string) {
 }
 
 func getTimeZone(latlng string, location string, remote bool) (string, string, error) {
-	utc := "n/a"
-	timezone := "undefined"
+	utc := ""
+	timezone := ""
 
 	// TODO: take this out to configuration
 	gapi := os.Getenv("GAPI")
@@ -118,16 +118,17 @@ func getTimeZone(latlng string, location string, remote bool) (string, string, e
 	var lat float64
 	var lng float64
 	if remote == true {
+		// Remotes doesn't have Lat/Lng set in LDAP, thus we have to guess it
+		// based on rhatLocation field
+
 		// TODO: Put some nice regexp here?
 		locationTrim1 := strings.Replace(location, "RH -", "", 1)
 		locationTrim2 := strings.Replace(locationTrim1, "Remote ", "", 1)
 		locationTrim3 := strings.Replace(locationTrim2, "US", "USA", 1)
 
-		// fallback, if no latitude and longitude are known
 		r := &maps.GeocodingRequest{
 			Address: locationTrim3,
 		}
-
 		loc, err := mapsc.Geocode(context.Background(), r)
 		if err != nil {
 			log.Println(err)
@@ -148,7 +149,6 @@ func getTimeZone(latlng string, location string, remote bool) (string, string, e
 		},
 		Timestamp: time.Now().UTC(),
 	}
-
 	tz, err := mapsc.Timezone(context.Background(), r)
 	if err != nil {
 		log.Println(err)

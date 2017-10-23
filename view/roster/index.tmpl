@@ -72,7 +72,8 @@
 				<th>Component</th>
 				<th>IRC</th>
 				<th>External</th>
-				<th>Location</th>
+				<th>Country [UTC] </th>
+				<th>Time</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -91,15 +92,53 @@
 				</td>
 				<td>
 					<span v-if="member.Remote">Remote</span>
-					<span>${member.Country}</span>
-					<span :title="member.Timezone">, UTC${member.UTC}</span>
+					<span>${member.Country} [${member.UTC}]</span>
+				</td>
+				<td>
+					<clock :utcoffset="member.UTC" :tzname="member.Timezone"></clock>
 				</td>
 			</tr>
 		</tbody>
 	</table>
 </template>
 
+<template id="clock">
+	<span>
+		<span :title="tzname"><i class="fa fa-clock-o"></i></span>
+		<span :title="date">${time}</span>
+	</span>
+</template>
+
 <script type="text/javascript">
+	Vue.component('clock', {
+		delimiters: ['${', '}'],
+		template: "#clock",
+		props: ['utcoffset', 'tzname'],
+		data: function () {
+			return {
+				time: '',
+				date: ''
+			}
+		},
+		methods: {
+			calcTime: function () {
+				var d = new Date()
+				var utc = d.getTime() + (d.getTimezoneOffset() * 60000)
+				var nd = new Date(utc + (3600000*this.utcoffset))
+				var options_time = { hour: 'numeric', minute: 'numeric', second: 'numeric' }
+				var options_date = { month: 'short', day: 'numeric', year: 'numeric' }
+				this.time = Intl.DateTimeFormat('en-US', options_time).format(nd)
+				this.date = Intl.DateTimeFormat('en-US', options_date).format(nd)
+			}
+		},
+		mounted: function() {
+			this.interval = setInterval(this.calcTime, 1000)
+		},
+		beforeDestroy: function() {
+			clearInterval(this.interval)
+		}
+	})
+
 	Vue.component('groupDetails', {
 		delimiters: ['${', '}'],
 		template: "#details",
