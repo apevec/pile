@@ -98,49 +98,62 @@ func removeMe(xs *[]string) {
 	}
 }
 
-func getTimeZone(latlng string) (string, string) {
+func getTimeZone(latlng string, co string) (string, string) {
 	utc := "n/a"
 	timezone := "undefined"
 
-	if latlng != "" {
-		lat, _ := strconv.ParseFloat(strings.Split(latlng, ",")[0], 64)
-		lng, _ := strconv.ParseFloat(strings.Split(latlng, ",")[1], 64)
-
-		// TODO: take this out to configuration
-		gapi := os.Getenv("GAPI")
-		if gapi == "" {
-			log.Println("GAPI environment variable is not set. Can't find timezone!")
-			return utc, timezone
-		}
-		mapsc, err := maps.NewClient(maps.WithAPIKey(gapi))
-		if err != nil {
-			log.Println(err)
-			return utc, timezone
-		}
-
-		r := &maps.TimezoneRequest{
-			Location: &maps.LatLng{
-				Lat: lat,
-				Lng: lng,
-			},
-			Timestamp: time.Now().UTC(),
-		}
-
-		tz, err := mapsc.Timezone(context.Background(), r)
-		if err != nil {
-			log.Println(err)
-			return utc, timezone
-		}
-
-		utcOffset := (tz.RawOffset + tz.DstOffset) / 3600
-		utc = strconv.Itoa(utcOffset)
-		if utcOffset >= 0 {
-			utc = "+" + utc
-		}
-		timezone = tz.TimeZoneName
-	} else {
+	// TODO: take this out to configuration
+	gapi := os.Getenv("GAPI")
+	if gapi == "" {
+		log.Println("GAPI environment variable is not set. Can't find timezone!")
 		return utc, timezone
 	}
+	mapsc, err := maps.NewClient(maps.WithAPIKey(gapi))
+	if err != nil {
+		log.Println(err)
+		return utc, timezone
+	}
+
+	var lat float64
+	var lng float64
+	if latlng == "" {
+		// fallback, if no latitude and longitude are known
+		r := &maps.GeocodingRequest{
+			Address: co,
+		}
+		loc, err := mapsc.Geocode(context.Background(), r)
+		if err != nil {
+			log.Println(err)
+			return utc, timezone
+		}
+
+		lat = loc[0].Geometry.Location.Lat
+		lng = loc[0].Geometry.Location.Lng
+	} else {
+		lat, _ = strconv.ParseFloat(strings.Split(latlng, ",")[0], 64)
+		lng, _ = strconv.ParseFloat(strings.Split(latlng, ",")[1], 64)
+	}
+
+	r := &maps.TimezoneRequest{
+		Location: &maps.LatLng{
+			Lat: lat,
+			Lng: lng,
+		},
+		Timestamp: time.Now().UTC(),
+	}
+
+	tz, err := mapsc.Timezone(context.Background(), r)
+	if err != nil {
+		log.Println(err)
+		return utc, timezone
+	}
+
+	utcOffset := (tz.RawOffset + tz.DstOffset) / 3600
+	utc = strconv.Itoa(utcOffset)
+	if utcOffset >= 0 {
+		utc = "+" + utc
+	}
+	timezone = tz.TimeZoneName
 
 	return utc, timezone
 }
@@ -264,7 +277,7 @@ func GetMembers(ldapc Connection, group string) (map[string]*Member, error) {
 		location := ldapMember.GetAttributeValue("co")
 
 		latlng := ldapMember.GetAttributeValue("registeredAddress")
-		utc, timezone := getTimeZone(latlng)
+		utc, timezone := getTimeZone(latlng, location)
 
 		role := "Engineer"
 		if _, ok := mapMemberRole[uid]; ok {
