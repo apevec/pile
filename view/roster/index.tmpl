@@ -77,7 +77,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr v-if="loading"><td colspan="7" bgcolor="orange"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
+			<tr v-if="loading"><td colspan="8" bgcolor="orange"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
 			<tr v-for="(member, uid) in members">
 				<td><a :href="'https://rover.redhat.com/people/profile/' + uid + '/'">${member.Name}</a></td>
 				<td>${member.Role} <span v-if="member.CC == '667'">(QE)</span></td>
