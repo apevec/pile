@@ -100,6 +100,13 @@
 				</td>
 			</tr>
 		</tbody>
+		<tfoot>
+			<tr>
+				<td colspan="7">
+					<modal-map :members="members"></modal-map>
+				</td>
+			</tr>
+		</tfoot>
 	</table>
 </template>
 
@@ -110,7 +117,40 @@
 	</span>
 </template>
 
+<template id="modal-map">
+	<div id="map" style="height: 500px"></div>
+</template>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=<?>"></script>
+
 <script type="text/javascript">
+	Vue.component('modal-map', {
+		delimiters: ['${', '}'],
+		template: "#modal-map",
+		props: ["members"],
+		mounted: function () {
+			var map = new google.maps.Map(document.getElementById('map'), {
+				zoom: 4,
+				center: {lat: 37.090, lng: -95.712},
+				mapTypeId: 'terrain'
+	        })
+/*
+			for (var city in this.citymap) {
+				var cityCircle = new google.maps.Circle({
+					strokeColor: '#FF0000',
+					strokeOpacity: 0.8,
+					strokeWeight: 2,
+					fillColor: '#FF0000',
+					fillOpacity: 0.35,
+					map: map,
+					center: citymap[city].center,
+					radius: Math.sqrt(citymap[city].population) * 100
+				})
+			}
+*/
+		}
+	})
+
 	Vue.component('clock', {
 		delimiters: ['${', '}'],
 		template: "#clock",
