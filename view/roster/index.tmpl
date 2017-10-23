@@ -76,6 +76,7 @@
 			</tr>
 		</thead>
 		<tbody>
+			<tr v-if="loading"><td colspan="7"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
 			<tr v-for="(member, uid) in members">
 				<td><a :href="'https://rover.redhat.com/people/profile/' + uid + '/'">${member.Name}</a></td>
 				<td>${member.Role} <span v-if="member.CC == '667'">(QE)</span></td>
@@ -105,12 +106,14 @@
 		props: ['squads'],
 		data: function () {
 			return {
-				 members: {}
+				 members: {},
+				 loading: true
 			}
 		},
 		mounted: function () {
 			this.$http.get('/roster/v1/members/'+this.$parent.active).then(function(response) {
 				this.members = response.body
+				this.loading = false
 			})
 		},
 		updated: function() {
