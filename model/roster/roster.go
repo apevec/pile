@@ -2,9 +2,15 @@
 package roster
 
 import (
+	"context"
 	"log"
+	"os"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
+
+	"googlemaps.github.io/maps"
 
 	ldap "gopkg.in/ldap.v2"
 )
@@ -16,8 +22,10 @@ type Member struct {
 	Squad    string
 	Data     map[string]string
 	IRC      string
-	Location string
 	CC       string
+	Location string
+	UTC      string
+	Timezone string
 }
 
 type Group struct {
@@ -88,6 +96,53 @@ func removeMe(xs *[]string) {
 			break
 		}
 	}
+}
+
+func getTimeZone(latlng string) (string, string) {
+	utc := "n/a"
+	timezone := "undefined"
+
+	if latlng != "" {
+		lat, _ := strconv.ParseFloat(strings.Split(latlng, ",")[0], 64)
+		lng, _ := strconv.ParseFloat(strings.Split(latlng, ",")[1], 64)
+
+		// TODO: take this out to configuration
+		gapi := os.Getenv("GAPI")
+		if gapi == "" {
+			log.Println("GAPI environment variable is not set. Can't find timezone!")
+			return utc, timezone
+		}
+		mapsc, err := maps.NewClient(maps.WithAPIKey(gapi))
+		if err != nil {
+			log.Println(err)
+			return utc, timezone
+		}
+
+		r := &maps.TimezoneRequest{
+			Location: &maps.LatLng{
+				Lat: lat,
+				Lng: lng,
+			},
+			Timestamp: time.Now().UTC(),
+		}
+
+		tz, err := mapsc.Timezone(context.Background(), r)
+		if err != nil {
+			log.Println(err)
+			return utc, timezone
+		}
+
+		utcOffset := (tz.RawOffset + tz.DstOffset) / 3600
+		utc = strconv.Itoa(utcOffset)
+		if utcOffset >= 0 {
+			utc = "+" + utc
+		}
+		timezone = tz.TimeZoneName
+	} else {
+		return utc, timezone
+	}
+
+	return utc, timezone
 }
 
 func GetGroups(ldapc Connection) (map[string]*Group, error) {
@@ -205,8 +260,11 @@ func GetMembers(ldapc Connection, group string) (map[string]*Member, error) {
 		name := ldapMember.GetAttributeValue("cn")
 		data := decodeNote(ldapMember.GetAttributeValue("rhatBio"))
 		ircnick := ldapMember.GetAttributeValue("rhatNickName")
-		location := ldapMember.GetAttributeValue("co")
 		cc := ldapMember.GetAttributeValue("rhatCostCenter")
+		location := ldapMember.GetAttributeValue("co")
+
+		latlng := ldapMember.GetAttributeValue("registeredAddress")
+		utc, timezone := getTimeZone(latlng)
 
 		role := "Engineer"
 		if _, ok := mapMemberRole[uid]; ok {
@@ -224,8 +282,10 @@ func GetMembers(ldapc Connection, group string) (map[string]*Member, error) {
 			Data:     data,
 			Squad:    squad,
 			IRC:      ircnick,
-			Location: location,
 			CC:       cc,
+			Location: location,
+			UTC:      utc,
+			Timezone: timezone,
 		}
 	}
 

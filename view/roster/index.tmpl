@@ -88,7 +88,10 @@
 						<!-- span v-if="name == 'Link'"><i class="fa fa-link" title="Link"> ${link} </i></span -->
 					</span>
 				</td>
-				<td>${member.Location}</td>
+				<td>
+					${member.Location}
+					<span v-if="member.UTC != 'n/a'" :title="member.Timezone">, UTC${member.UTC}</span>
+				</td>
 			</tr>
 		</tbody>
 	</table>
@@ -101,7 +104,7 @@
 		props: ['squads'],
 		data: function () {
 			return {
-				 members: []
+				 members: {}
 			}
 		},
 		mounted: function () {
