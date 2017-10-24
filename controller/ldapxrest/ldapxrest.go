@@ -11,18 +11,18 @@ type Connection interface {
 	GetSquadMembers(group string, squad string) (*ldap.Entry, error)
 }
 
-func GetGroupSize(ldapc Connection, group string) (map[string]int, error) {
-	var size = make(map[string]int)
+func GetGroupMembers(ldapc Connection, group string) (map[string]string, int, error) {
+	var members = make(map[string]string)
 
 	ldapGroupMembers, err := ldapc.GetGroupMembers(group)
 	if err != nil {
-		return size, err
+		return members, 0, err
 	}
 	groupMembers := ldapGroupMembers.GetAttributeValues("memberUid")
 
 	squads, err := GetSquads(ldapc, group)
 	if err != nil {
-		return size, err
+		return members, 0, err
 	}
 	for squad := range squads {
 		ldapSquadMembers, _ := ldapc.GetSquadMembers(group, squad)
@@ -33,9 +33,23 @@ func GetGroupSize(ldapc Connection, group string) (map[string]int, error) {
 	}
 
 	removeDuplicates(&groupMembers)
+	for _, groupMember := range groupMembers {
+		members[groupMember] = "tbd: name"
+	}
+
+	return members, len(squads), err
+}
+
+func GetGroupSize(ldapc Connection, group string) (map[string]int, error) {
+	var size = make(map[string]int)
+
+	groupMembers, squads, err := GetGroupMembers(ldapc, group)
+	if err != nil {
+		return size, err
+	}
 
 	size["people"] = len(groupMembers)
-	size["squads"] = len(squads)
+	size["squads"] = squads
 
 	return size, err
 }
