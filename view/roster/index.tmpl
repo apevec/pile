@@ -73,7 +73,7 @@
 				<th>IRC</th>
 				<th>External</th>
 				<th>Country [UTC] </th>
-				<th>Time</th>
+				<th class="no-sort">Time</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -157,7 +157,16 @@
 			})
 		},
 		updated: function() {
-			$('#datatable').DataTable({searching: false, paging: false, info: false, 'sDom': 't'});
+			$('#datatable').DataTable({
+				searching: false,
+				paging: false,
+				info: false,
+				'sDom': 't',
+				"columnDefs": [{
+					"targets": 'no-sort',
+					"orderable": false,
+					}]
+				});
 		}
 	})
 
