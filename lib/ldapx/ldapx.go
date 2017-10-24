@@ -17,12 +17,16 @@ var (
 		"cn",          // group id
 		"description", // description
 	}
+	ldapAttrGroupMembers = []string{
+		"memberUid", // []members
+	}
 	ldapAttrGroup = []string{
 		"cn",             // group id
 		"description",    // description
 		"memberUid",      // []members
 		"rhatGroupNotes", // notes
 	}
+
 	ldapAttrMemberFull = []string{
 		"uid",                // uid
 		"cn",                 // fullname
@@ -91,51 +95,73 @@ func (c *Conn) query(basedn string, ldapAttributes []string, filter string) ([]*
 	return ldapGroups.Entries, err
 }
 
-func (c *Conn) GetGroups(tiny bool, groups ...string) ([]*ldap.Entry, error) {
+func (c *Conn) getGroups(ldapAttributes []string, groups ...string) ([]*ldap.Entry, error) {
 	var filter string
 
-	if len(groups) == 0 {
-		// "(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))"
-		filter = "(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))"
-	} else {
-		// "(&(objectClass=rhatGroup)(|(cn=group1)(uid=group2)(uid=group3)))"
+	// "(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))"
+	filter = "(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))"
+	if len(groups) > 0 {
 		filter = "(&(objectClass=rhatGroup)(&"
 		for _, group := range groups {
-			filter = filter + fmt.Sprintf("(cn=%s)", group)
+			filter += fmt.Sprintf("(cn=%s)", group)
 		}
-		filter = filter + "))"
+		filter += "))"
 	}
 
-	if tiny {
-		return c.query(basednGroups, ldapAttrGroupTiny, filter)
-	}
-	return c.query(basednGroups, ldapAttrGroup, filter)
-}
-
-func (c *Conn) GetGroup(group string) (*ldap.Entry, error) {
-	ldapGroups, err := c.GetGroups(false, group)
-	return ldapGroups[0], err
+	return c.query(basednGroups, ldapAttributes, filter)
 }
 
 func (c *Conn) GetAllGroups() ([]*ldap.Entry, error) {
-	return c.GetGroups(false)
+	return c.getGroups(ldapAttrGroup)
 }
 
 func (c *Conn) GetAllGroupsTiny() ([]*ldap.Entry, error) {
-	return c.GetGroups(true)
+	return c.getGroups(ldapAttrGroupTiny)
+}
+
+func (c *Conn) GetGroupMembers(group string) (*ldap.Entry, error) {
+	ldapGroups, err := c.getGroups(ldapAttrGroupMembers, group)
+	return ldapGroups[0], err
+}
+
+func (c *Conn) getSquads(ldapAttributes []string, group string, squads ...string) ([]*ldap.Entry, error) {
+	var filter string
+
+	// "(&(objectClass=rhatGroup)(cn=rhos-dfg-%group%-squad-*))"
+	filter = fmt.Sprintf("(&(objectClass=rhatGroup)(cn=%s-squad-*))", group)
+	if len(squads) > 0 {
+		filter = "(&(objectClass=rhatGroup)(&"
+		for _, squad := range squads {
+			filter += fmt.Sprintf("(cn=%s)", squad)
+		}
+		filter += "))"
+	}
+
+	return c.query(basednGroups, ldapAttributes, filter)
+}
+
+func (c *Conn) GetAllSquads(group string) ([]*ldap.Entry, error) {
+	return c.getSquads(ldapAttrGroup, group)
+}
+
+func (c *Conn) GetAllSquadsTiny(group string) ([]*ldap.Entry, error) {
+	return c.getSquads(ldapAttrGroupTiny, group)
+}
+
+func (c *Conn) GetSquadMembers(group string, squad string) (*ldap.Entry, error) {
+	ldapSquads, err := c.getSquads(ldapAttrGroupMembers, group, squad)
+	return ldapSquads[0], err
+}
+
+///////////////////////////
+
+func (c *Conn) GetGroup(group string) (*ldap.Entry, error) {
+	ldapGroups, err := c.getGroups(ldapAttrGroup, group)
+	return ldapGroups[0], err
 }
 
 func (c *Conn) GetSquad(squad string) (*ldap.Entry, error) {
 	return c.GetGroup(squad)
-}
-
-func (c *Conn) GetAllSquads(group string) ([]*ldap.Entry, error) {
-	var filter string
-
-	// "(&(objectClass=rhatGroup)(cn=%s-squad-*))"
-	filter = fmt.Sprintf("(&(objectClass=rhatGroup)(cn=%s-squad-*))", group)
-
-	return c.query(basednGroups, ldapAttrGroup, filter)
 }
 
 func (c *Conn) GetRoles(roles ...string) ([]*ldap.Entry, error) {
