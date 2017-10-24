@@ -22,14 +22,24 @@
 		</div>
 
 		<div class="panel-body">
-			<!-- head -->
-
-			<!-- foot: details -->
-
+			<group-head :gid="gid"></group-head>
 		</div>
+
+		<!-- foot: details -->
+
 	</div>
 
 </div>
+
+<template id="group-head">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-2">a</div>
+			<div class="col-md-5">b</div>
+			<div class="col-md-5">c</div>
+		</div>
+	</div>
+</template>
 
 <template id="group-title">
 	<span class="pull-right">
@@ -39,6 +49,12 @@
 </template>
 
 <script type="text/javascript">
+	var GroupHead = {
+		template: '#group-head',
+		delimiters: ['${', '}'],
+		props: ['gid'],
+
+	};
 	var GroupTitle = {
 		template: '#group-title',
 		delimiters: ['${', '}'],
@@ -68,6 +84,7 @@
 		},
 		components: {
 			'group-title': GroupTitle,
+			'group-head': GroupHead,
 		},
 	});
 </script>
