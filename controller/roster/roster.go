@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/arapov/pile/controller/ldapxrest"
 	"github.com/arapov/pile/lib/flight"
 	"github.com/arapov/pile/model/roster"
 
@@ -21,6 +22,7 @@ func Load() {
 	//c := router.Chain(acl.DisallowAnon)
 	router.Get(uri, Index) //, c...)
 	router.Get(uri+"/v1/groups", GetGroups)
+	router.Get(uri+"/v2/groups", GetGroups2)
 	router.Get(uri+"/v1/members/:group", GetMembers)
 	router.Get("/ping", Ping)
 }
@@ -49,6 +51,16 @@ func GetGroups(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	groups, _ := roster.GetGroups(c.LDAP)
+	js, _ := json.Marshal(groups)
+
+	w.Write(js)
+}
+
+func GetGroups2(w http.ResponseWriter, r *http.Request) {
+	c := flight.Context(w, r)
+	w.Header().Set("Content-Type", "application/json")
+
+	groups, _ := ldapxrest.GetGroups(c.LDAP)
 	js, _ := json.Marshal(groups)
 
 	w.Write(js)

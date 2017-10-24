@@ -6,7 +6,28 @@
 {{define "content"}}
 
 <div id="roster">
+	<div class="page-header">
+		<span v-for="(group, id) in groups">
+			[<a :href="'#' + id">${group}</a>]
+		</span>
+	</div>
+
 </div>
+
+<script type="text/javascript">
+	let roster = new Vue({
+		el: '#roster',
+		delimiters: ['${', '}'],
+		data: {
+			groups: [],
+		},
+		mounted: function() {
+			this.$http.get('/roster/v2/groups').then(function(response) {
+				this.groups = response.body
+			});
+		},
+	});
+</script>
 
 {{JS "/static/js/jquery.dataTables.min.js"}}
 {{template "footer" .}}{{end}}

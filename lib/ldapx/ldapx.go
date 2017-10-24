@@ -13,6 +13,10 @@ var (
 	basednGroups  = "ou=adhoc,ou=managedGroups,dc=redhat,dc=com"
 	basednMembers = "ou=users,dc=redhat,dc=com"
 
+	ldapAttrGroupTiny = []string{
+		"cn",          // group id
+		"description", // description
+	}
 	ldapAttrGroup = []string{
 		"cn",             // group id
 		"description",    // description
@@ -87,7 +91,7 @@ func (c *Conn) query(basedn string, ldapAttributes []string, filter string) ([]*
 	return ldapGroups.Entries, err
 }
 
-func (c *Conn) GetGroups(groups ...string) ([]*ldap.Entry, error) {
+func (c *Conn) GetGroups(tiny bool, groups ...string) ([]*ldap.Entry, error) {
 	var filter string
 
 	if len(groups) == 0 {
@@ -102,16 +106,23 @@ func (c *Conn) GetGroups(groups ...string) ([]*ldap.Entry, error) {
 		filter = filter + "))"
 	}
 
+	if tiny {
+		return c.query(basednGroups, ldapAttrGroupTiny, filter)
+	}
 	return c.query(basednGroups, ldapAttrGroup, filter)
 }
 
 func (c *Conn) GetGroup(group string) (*ldap.Entry, error) {
-	ldapGroups, err := c.GetGroups(group)
+	ldapGroups, err := c.GetGroups(false, group)
 	return ldapGroups[0], err
 }
 
 func (c *Conn) GetAllGroups() ([]*ldap.Entry, error) {
-	return c.GetGroups()
+	return c.GetGroups(false)
+}
+
+func (c *Conn) GetAllGroupsTiny() ([]*ldap.Entry, error) {
+	return c.GetGroups(true)
 }
 
 func (c *Conn) GetSquad(squad string) (*ldap.Entry, error) {
