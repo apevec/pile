@@ -17,18 +17,21 @@
 		<div :id="gid" class="panel-heading">
 			<h2 class="panel-title">
 				<span>${group}</span>
-				<group-header :gid="gid"></group-header>
+				<group-title :gid="gid"></group-title>
 			</h2>
 		</div>
 
 		<div class="panel-body">
+			<!-- head -->
+
+			<!-- foot: details -->
 
 		</div>
 	</div>
 
 </div>
 
-<template id="group-header">
+<template id="group-title">
 	<span class="pull-right">
 		<span v-if="groupsize.squads" title="Squads"><i class="fa fa-users"></i> ${groupsize.squads}</span>
 		<span title="People"><i class="fa fa-user-circle-o"></i> ${groupsize.people}</span>
@@ -36,8 +39,8 @@
 </template>
 
 <script type="text/javascript">
-	var GroupHeader = {
-		template: '#group-header',
+	var GroupTitle = {
+		template: '#group-title',
 		delimiters: ['${', '}'],
 		props: ['gid'],
 		data: function() {
@@ -64,7 +67,7 @@
 			});
 		},
 		components: {
-			'group-header': GroupHeader,
+			'group-title': GroupTitle,
 		},
 	});
 </script>
