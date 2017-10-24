@@ -6,15 +6,52 @@
 {{define "content"}}
 
 <div id="roster">
+
 	<div class="page-header">
-		<span v-for="(group, id) in groups">
-			[<a :href="'#' + id">${group}</a>]
+		<span v-for="(group, gid) in groups">
+			[<a :href="'#' + gid">${group}</a>]
 		</span>
+	</div>
+
+	<div v-for="(group, gid) in groups" class="panel panel-default">
+		<div :id="gid" class="panel-heading">
+			<h2 class="panel-title">
+				<span>${group}</span>
+				<group-header :gid="gid"></group-header>
+			</h2>
+		</div>
+
+		<div class="panel-body">
+
+		</div>
 	</div>
 
 </div>
 
+<template id="group-header">
+	<span class="pull-right">
+		<span v-if="groupsize.squads" title="Squads"><i class="fa fa-users"></i> ${groupsize.squads}</span>
+		<span title="People"><i class="fa fa-user-circle-o"></i> ${groupsize.people}</span>
+	</span>
+</template>
+
 <script type="text/javascript">
+	var GroupHeader = {
+		template: '#group-header',
+		delimiters: ['${', '}'],
+		props: ['gid'],
+		data: function() {
+			return {
+				groupsize: [],
+			};
+		},
+		mounted: function() {
+			this.$http.get('roster/v2/groups/' + this.gid + '/size').then(function(response) {
+				this.groupsize = response.body;
+			});
+		},
+	};
+
 	let roster = new Vue({
 		el: '#roster',
 		delimiters: ['${', '}'],
@@ -23,8 +60,11 @@
 		},
 		mounted: function() {
 			this.$http.get('/roster/v2/groups').then(function(response) {
-				this.groups = response.body
+				this.groups = response.body;
 			});
+		},
+		components: {
+			'group-header': GroupHeader,
 		},
 	});
 </script>

@@ -22,9 +22,11 @@ func Load() {
 	//c := router.Chain(acl.DisallowAnon)
 	router.Get(uri, Index) //, c...)
 	router.Get(uri+"/v1/groups", GetGroups)
-	router.Get(uri+"/v2/groups", GetGroups2)
 	router.Get(uri+"/v1/members/:group", GetMembers)
 	router.Get("/ping", Ping)
+
+	router.Get(uri+"/v2/groups", GetGroups2)
+	router.Get(uri+"/v2/groups/:group/size", GetGroupSize)
 }
 
 // Index displays the items.
@@ -52,6 +54,17 @@ func GetGroups(w http.ResponseWriter, r *http.Request) {
 
 	groups, _ := roster.GetGroups(c.LDAP)
 	js, _ := json.Marshal(groups)
+
+	w.Write(js)
+}
+
+func GetGroupSize(w http.ResponseWriter, r *http.Request) {
+	c := flight.Context(w, r)
+	w.Header().Set("Content-Type", "application/json")
+
+	group := c.Param("group")
+	size, _ := ldapxrest.GetGroupSize(c.LDAP, group)
+	js, _ := json.Marshal(size)
 
 	w.Write(js)
 }
