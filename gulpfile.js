@@ -273,6 +273,12 @@ gulp.task('watch', ['server:build'], function() {
 	gulp.watch(folderAsset + '/dynamic/sass/**/*.scss', ['sass']);
 	gulp.watch(folderAsset + '/dynamic/js/*.js', ['javascript']);
 
+	// Watch the sources
+	gulp.watch('view/**')
+	gulp.watch('model/**')
+	gulp.watch('controller/**')
+	gulp.watch('lib/**')
+
 	return gulp.start(sync([
 		'server:watch',
 		'server:spawn'
