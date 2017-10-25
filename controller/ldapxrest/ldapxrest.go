@@ -1,12 +1,31 @@
 package ldapxrest
 
 import (
+	"context"
+	"log"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+
+	"googlemaps.github.io/maps"
 	ldap "gopkg.in/ldap.v2"
 )
 
 type role struct {
 	Name    string
 	Members []string
+}
+
+type member struct {
+	Name    string
+	Role    string
+	Squad   string
+	Data    map[string]string
+	IRC     string
+	Country string
+	CC      string
 }
 
 type Connection interface {
@@ -16,6 +35,119 @@ type Connection interface {
 	GetGroupMembers(group string) (*ldap.Entry, error)
 	GetSquadMembers(group string, squad string) (*ldap.Entry, error)
 	GetPeopleTiny(ids []string) ([]*ldap.Entry, error)
+	GetPeopleFull(ids []string) ([]*ldap.Entry, error)
+	GetPeopleLocationData(ids ...string) ([]*ldap.Entry, error)
+	GetGroupLinks(group string) (*ldap.Entry, error)
+}
+
+func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
+	var tzinfo = make(map[string]string)
+
+	ldapLocationData, err := ldapc.GetPeopleLocationData(uid)
+	if err != nil {
+		return tzinfo, err
+	}
+
+	ldapLocation := ldapLocationData[0] // safe: we have alays one item here
+
+	remote := false
+	if ldapLocation.GetAttributeValue("rhatOfficeLocation") == "REMOTE" {
+		remote = true
+	}
+
+	latlng := ldapLocation.GetAttributeValue("registeredAddress")
+	location := ldapLocation.GetAttributeValue("rhatLocation")
+	utc, timezone, err := getTimeZone(latlng, location, remote)
+	if err != nil {
+		return nil, err
+	}
+
+	tzinfo["utcOffset"] = utc
+	tzinfo["tzName"] = timezone
+
+	return tzinfo, err
+}
+
+func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error) {
+	var members = map[string]*member{}
+
+	uids, err := GetGroupMembersSlice(ldapc, group)
+	if err != nil {
+		return members, err
+	}
+
+	roles, err := GetRoles(ldapc)
+	if err != nil {
+		return members, err
+	}
+
+	var mapPeopleRole = make(map[string]string)
+	for _, role := range roles {
+		for _, uid := range role.Members {
+			mapPeopleRole[uid] = role.Name
+		}
+	}
+
+	ldapPeople, err := ldapc.GetPeopleFull(uids)
+	if err != nil {
+		return members, err
+	}
+
+	var mapPeopleSquad = make(map[string]string)
+	squads, err := GetSquads(ldapc, group)
+	if err != nil {
+		return members, err
+	}
+	for squad, squadName := range squads {
+		squadMembers, _ := GetGroupMembersSlice(ldapc, squad)
+		for _, squadMember := range squadMembers {
+			mapPeopleSquad[squadMember] = squadName
+		}
+	}
+
+	for _, man := range ldapPeople {
+		uid := man.GetAttributeValue("uid")
+		name := man.GetAttributeValue("cn")
+		ircnick := man.GetAttributeValue("rhatNickName")
+		data := decodeNote(man.GetAttributeValue("rhatBio"))
+		co := man.GetAttributeValue("co")
+		cc := man.GetAttributeValue("rhatCostCenter")
+
+		role := "Engineer"
+		if _, ok := mapPeopleRole[uid]; ok {
+			role = mapPeopleRole[uid]
+		}
+
+		squad := ""
+		if _, ok := mapPeopleSquad[uid]; ok {
+			squad = mapPeopleSquad[uid]
+		}
+
+		members[uid] = &member{
+			Name:    name,
+			Role:    role,
+			Squad:   squad,
+			Data:    data,
+			IRC:     ircnick,
+			Country: co,
+			CC:      cc,
+		}
+
+	}
+
+	return members, err
+}
+
+func GetGroupLinks(ldapc Connection, group string) (map[string]string, error) {
+	var links = make(map[string]string)
+
+	ldapLinks, err := ldapc.GetGroupLinks(group)
+	if err != nil {
+		return links, err
+	}
+	links = decodeNote(ldapLinks.GetAttributeValue("rhatGroupNotes"))
+
+	return links, err
 }
 
 func GetGroupHead(ldapc Connection, group string) (map[string][]map[string]string, error) {
@@ -39,7 +171,7 @@ func GetGroupHead(ldapc Connection, group string) (map[string][]map[string]strin
 
 	}
 
-	groupMembers, err := GetGroupMembers(ldapc, group)
+	groupMembers, err := GetGroupMembersSlice(ldapc, group)
 	if err != nil {
 		return head, err
 	}
@@ -101,7 +233,7 @@ func GetRoles(ldapc Connection) (map[string]*role, error) {
 	return roles, err
 }
 
-func GetGroupMembers(ldapc Connection, group string) ([]string, error) {
+func GetGroupMembersSlice(ldapc Connection, group string) ([]string, error) {
 	var members []string
 
 	ldapGroupMembers, err := ldapc.GetGroupMembers(group)
@@ -136,7 +268,7 @@ func GetGroupMembers(ldapc Connection, group string) ([]string, error) {
 func GetGroupSize(ldapc Connection, group string) (map[string]int, error) {
 	var size = make(map[string]int)
 
-	groupMembers, err := GetGroupMembers(ldapc, group)
+	groupMembers, err := GetGroupMembersSlice(ldapc, group)
 	if err != nil {
 		return size, err
 	}
@@ -223,4 +355,85 @@ func removeMe(xs *[]string) {
 			break
 		}
 	}
+}
+
+func decodeNote(note string) map[string]string {
+	result := make(map[string]string)
+
+	re, _ := regexp.Compile(`pile:(\w*=[a-zA-z0-9:/.@-]+)`)
+	// TODO: take care of error here
+	pile := re.FindAllStringSubmatch(note, -1)
+	// TODO: code below is fragile, very fragile
+	for i := range pile {
+		kv := strings.Split(pile[i][1], "=")
+		result[strings.Title(kv[0])] = kv[1]
+	}
+
+	return result
+}
+
+func getTimeZone(latlng string, location string, remote bool) (string, string, error) {
+	utc := ""
+	timezone := ""
+
+	// TODO: take this out to configuration
+	gapi := os.Getenv("GAPI")
+	if gapi == "" {
+		log.Println("GAPI environment variable is not set. Can't find timezone!")
+		// return utc, timezone
+	}
+	mapsc, err := maps.NewClient(maps.WithAPIKey(gapi))
+	if err != nil {
+		log.Println(err)
+		return utc, timezone, err
+	}
+
+	var lat float64
+	var lng float64
+	if remote == true {
+		// Remotes doesn't have Lat/Lng set in LDAP, thus we have to guess it
+		// based on rhatLocation field
+
+		// TODO: Put some nice regexp here?
+		locationTrim1 := strings.Replace(location, "RH -", "", 1)
+		locationTrim2 := strings.Replace(locationTrim1, "Remote ", "", 1)
+		locationTrim3 := strings.Replace(locationTrim2, "US", "USA", 1)
+
+		r := &maps.GeocodingRequest{
+			Address: locationTrim3,
+		}
+		loc, err := mapsc.Geocode(context.Background(), r)
+		if err != nil {
+			log.Println(err)
+			return utc, timezone, err
+		}
+
+		lat = loc[0].Geometry.Location.Lat
+		lng = loc[0].Geometry.Location.Lng
+	} else {
+		lat, _ = strconv.ParseFloat(strings.Split(latlng, ",")[0], 64)
+		lng, _ = strconv.ParseFloat(strings.Split(latlng, ",")[1], 64)
+	}
+
+	r := &maps.TimezoneRequest{
+		Location: &maps.LatLng{
+			Lat: lat,
+			Lng: lng,
+		},
+		Timestamp: time.Now().UTC(),
+	}
+	tz, err := mapsc.Timezone(context.Background(), r)
+	if err != nil {
+		log.Println(err)
+		return utc, timezone, err
+	}
+
+	utcOffset := (tz.RawOffset + tz.DstOffset) / 3600
+	utc = strconv.Itoa(utcOffset)
+	if utcOffset >= 0 {
+		utc = "+" + utc
+	}
+	timezone = tz.TimeZoneName
+
+	return utc, timezone, err
 }

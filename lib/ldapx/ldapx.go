@@ -20,33 +20,38 @@ var (
 	ldapAttrGroupMembers = []string{
 		"memberUid", // []members
 	}
-	ldapAttrGroup = []string{
-		"cn",             // group id
-		"description",    // description
-		"memberUid",      // []members
+	ldapAttrGroupLinks = []string{
 		"rhatGroupNotes", // notes
 	}
-
-	ldapAttrMemberFull = []string{
-		"uid",                // uid
-		"cn",                 // fullname
-		"co",                 // country
-		"rhatBio",            // notes/bio
-		"rhatNickName",       // irc nick
-		"rhatCostCenter",     // cost center
-		"rhatLocation",       // location
-		"registeredAddress",  // lat/lng
-		"rhatOfficeLocation", // describes REMOTE
-	}
-	ldapAttrMemberTiny = []string{
-		"uid", // uid
-		"cn",  // fullname
+	ldapAttrGroup = []string{
+		"cn",          // group id
+		"description", // description
+		"memberUid",   // []members
 	}
 	ldapAttrRoles = []string{
 		"cn",          // roles id
 		"description", // description
 		"memberUid",   // []members
 	}
+	ldapAttrMemberTiny = []string{
+		"uid", // uid
+		"cn",  // fullname
+	}
+	ldapAttrMemberFull = []string{
+		"uid",            // uid
+		"cn",             // fullname
+		"co",             // country
+		"rhatBio",        // notes/bio
+		"rhatNickName",   // irc nick
+		"rhatCostCenter", // cost center
+	}
+	ldapAttrMemberLocation = []string{
+		"uid",                // uid
+		"rhatLocation",       // location
+		"registeredAddress",  // lat/lng
+		"rhatOfficeLocation", // describes REMOTE
+	}
+
 	// ldapRolesMap - keys are the role groups in ldap
 	ldapRolesMap = map[string]string{
 		"rhos-pm":         "Product Management",
@@ -124,6 +129,11 @@ func (c *Conn) GetGroupMembers(group string) (*ldap.Entry, error) {
 	return ldapGroups[0], err
 }
 
+func (c *Conn) GetGroupLinks(group string) (*ldap.Entry, error) {
+	ldapLinks, err := c.getGroups(ldapAttrGroupLinks, group)
+	return ldapLinks[0], err
+}
+
 func (c *Conn) getSquads(ldapAttributes []string, group string, squads ...string) ([]*ldap.Entry, error) {
 	var filter string
 
@@ -191,13 +201,6 @@ func (c *Conn) GetPeopleFull(ids []string) ([]*ldap.Entry, error) {
 	return c.getPeople(ldapAttrMemberFull, ids)
 }
 
-///////////////////////////
-
-func (c *Conn) GetGroup(group string) (*ldap.Entry, error) {
-	ldapGroups, err := c.getGroups(ldapAttrGroup, group)
-	return ldapGroups[0], err
-}
-
-func (c *Conn) GetSquad(squad string) (*ldap.Entry, error) {
-	return c.GetGroup(squad)
+func (c *Conn) GetPeopleLocationData(ids ...string) ([]*ldap.Entry, error) {
+	return c.getPeople(ldapAttrMemberLocation, ids)
 }

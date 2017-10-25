@@ -22,17 +22,46 @@ func Load() {
 	router.Get(uri, Index) //, c...)
 	router.Get("/ping", Ping)
 
-	router.Get(uri+"/v2/groups", GetGroups2)
+	router.Get(uri+"/v2/people/:uid/tz", GetTimezoneInfo)
+
+	router.Get(uri+"/v2/groups", GetGroups)
 	router.Get(uri+"/v2/groups/:group/size", GetGroupSize)
 	router.Get(uri+"/v2/groups/:group/head", GetGroupHead)
+	router.Get(uri+"/v2/groups/:group/links", GetGroupLinks)
+	router.Get(uri+"/v2/groups/:group/members", GetGroupMembers)
 }
 
-// Index displays the items.
-func Index(w http.ResponseWriter, r *http.Request) {
+func GetTimezoneInfo(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
+	w.Header().Set("Content-Type", "application/json")
 
-	v := c.View.New("roster/index")
-	v.Render(w, r)
+	uid := c.Param("uid")
+	tzinfo, _ := ldapxrest.GetTimezoneInfo(c.LDAP, uid)
+	js, _ := json.Marshal(tzinfo)
+
+	w.Write(js)
+}
+
+func GetGroupMembers(w http.ResponseWriter, r *http.Request) {
+	c := flight.Context(w, r)
+	w.Header().Set("Content-Type", "application/json")
+
+	group := c.Param("group")
+	members, _ := ldapxrest.GetGroupMembers(c.LDAP, group)
+	js, _ := json.Marshal(members)
+
+	w.Write(js)
+}
+
+func GetGroupLinks(w http.ResponseWriter, r *http.Request) {
+	c := flight.Context(w, r)
+	w.Header().Set("Content-Type", "application/json")
+
+	group := c.Param("group")
+	links, _ := ldapxrest.GetGroupLinks(c.LDAP, group)
+	js, _ := json.Marshal(links)
+
+	w.Write(js)
 }
 
 func GetGroupHead(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +86,7 @@ func GetGroupSize(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-func GetGroups2(w http.ResponseWriter, r *http.Request) {
+func GetGroups(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
@@ -65,6 +94,13 @@ func GetGroups2(w http.ResponseWriter, r *http.Request) {
 	js, _ := json.Marshal(groups)
 
 	w.Write(js)
+}
+
+func Index(w http.ResponseWriter, r *http.Request) {
+	c := flight.Context(w, r)
+
+	v := c.View.New("roster/index")
+	v.Render(w, r)
 }
 
 func Ping(w http.ResponseWriter, r *http.Request) {

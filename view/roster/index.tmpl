@@ -25,16 +25,76 @@
 			<group-head :gid="gid"></group-head>
 		</div>
 
-		<!-- foot: details -->
+		<keep-alive>
+			<group-details v-if="active == gid" :gid="gid"></group-details>
+		</keep-alive>
+
+		<button v-if="active != gid" v-on:click="showDetails(gid)" class="btn btn-default pull-right form-control" type="button">
+			<i class="fa fa-chevron-down"></i>
+		</button>
+
+		<div class="clearfix"></div>
 
 	</div>
 
 </div>
 
+<template id="clock">
+	<span>
+		<span :title="tz.tzName"><i class="fa fa-clock-o"></i></span>
+		<span :title="title">${time}</span>
+	</span>
+</template>
+
+<template id="group-details">
+	<table id="datatable" class="table table-striped table-hover">
+		<thead>
+			<tr>
+				<th>Full Name</th>
+				<th>Role</th>
+				<th v-if="squads">Squad</th>
+				<th>Component</th>
+				<th>IRC</th>
+				<th>External</th>
+				<th>Country</th>
+				<th class="no-sort">Time</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr v-for="(member, uid) in members">
+				<td>
+					<a :href="'https://rover.redhat.com/people/profile/' + uid + '/'">${member.Name}</a>
+				</td>
+				<td>${member.Role} <span v-if="member.CC == '667'">(QE)</span></td>
+				<td v-if="squads">${member.Squad}</td>
+				<td><span v-for="(data, name) in member.Data" v-if="name == 'Comp'">${data} </span></td>
+				<td>${member.IRC}</td>
+				<td>
+					<span v-for="(link, name) in member.Data">
+						<span v-if="name == 'Gtalk'"><i class="fa fa-google" title="Hangouts"></i> ${link} </span>
+						<!-- span v-if="name == 'Link'"><i class="fa fa-link" title="Link"> ${link} </i></span -->
+					</span>
+				</td>
+				<td>${member.Country}</td>
+				<td>
+					<clock :uid="uid"></clock>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</template>
+
 <template id="group-head">
 	<div class="container-fluid">
 		<div class="row">
-			<div class="col-md-2">links</div>
+			<div class="col-md-2">
+				<div v-for="(link, name) in grouplinks">
+					<i v-if="name == 'Backlog'" class="fa fa-tasks"></i>
+					<i v-else-if="name == 'Mission'" class="fa fa-bullseye"></i>
+					<i v-else class="fa fa-link"></i>
+					<a :href="link">${name}</a>
+				</div>
+			</div>
 			<div class="col-md-5">
 				<div v-for="(role, id) in grouphead" v-if="id == 'Steward' || id == 'Product Manager'">
 					<strong>${id}<span v-if="role.length > 1">s</span>:</strong>
@@ -59,6 +119,85 @@
 </template>
 
 <script type="text/javascript">
+	var GroupDetailsClock = {
+		template: '#clock',
+		delimiters: ['${', '}'],
+		props: ['uid'],
+		data: function() {
+			return {
+				time: '',
+				date: '',
+				tz: [],
+			};
+		},
+		computed: {
+			title: function() {
+				return this.date + '\n'
+					 + this.tz.tzName + '\n'
+					 + 'UTC' + this.tz.utcOffset;
+			},
+		},
+		methods: {
+			calcTime: function () {
+				var d = new Date();
+				var utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+				var nd = new Date(utc + (3600000 * this.tz.utcOffset));
+				var options_time = { hour: 'numeric', minute: 'numeric', second: 'numeric' };
+				var options_date = { month: 'short', day: 'numeric', year: 'numeric' };
+				this.time = Intl.DateTimeFormat('en-US', options_time).format(nd);
+				this.date = Intl.DateTimeFormat('en-US', options_date).format(nd);
+			},
+		},
+		mounted: function() {
+			this.$http.get('roster/v2/people/' + this.uid + '/tz').then(function(response) {
+				this.tz = response.body
+			});
+			this.interval = setInterval(this.calcTime, 1000);
+		},
+		beforeDestroy: function() {
+			clearInterval(this.interval);
+		},
+	};
+
+	var GroupDetails = {
+		template: '#group-details',
+		delimiters: ['${', '}'],
+		props: ['gid'],
+		data: function() {
+			return {
+				members: [],
+			};
+		},
+		computed: {
+			squads: function() {
+				for (uid in this.members) {
+					if (this.members[uid].Squad != '') return true;
+				};
+				return false;
+			},
+		},
+		mounted: function() {
+			this.$http.get('roster/v2/groups/' + this.gid + '/members').then(function(response) {
+				this.members = response.body
+			});
+		},
+		updated: function() {
+			$('#datatable').DataTable({
+				searching: false,
+				paging: false,
+				info: false,
+				'sDom': 't',
+				"columnDefs": [{
+					"targets": 'no-sort',
+					"orderable": false,
+					}]
+				});
+		},
+		components: {
+			'clock': GroupDetailsClock,
+		},
+	};
+
 	var GroupHead = {
 		template: '#group-head',
 		delimiters: ['${', '}'],
@@ -66,11 +205,15 @@
 		data: function() {
 			return {
 				grouphead: [],
+				grouplinks: [],
 			};
 		},
 		mounted: function() {
 			this.$http.get('roster/v2/groups/' + this.gid + '/head').then(function(response) {
 				this.grouphead = response.body
+			});
+			this.$http.get('roster/v2/groups/' + this.gid + '/links').then(function(response) {
+				this.grouplinks = response.body
 			});
 		},
 	};
@@ -96,15 +239,22 @@
 		delimiters: ['${', '}'],
 		data: {
 			groups: [],
+			active: "",
 		},
 		mounted: function() {
 			this.$http.get('/roster/v2/groups').then(function(response) {
 				this.groups = response.body;
 			});
 		},
+		methods: {
+			showDetails: function(group) {
+				this.active = group
+			},
+		},
 		components: {
 			'group-title': GroupTitle,
 			'group-head': GroupHead,
+			'group-details': GroupDetails,
 		},
 	});
 </script>
