@@ -38,7 +38,7 @@ var (
 		"registeredAddress",  // lat/lng
 		"rhatOfficeLocation", // describes REMOTE
 	}
-	ldapAttrMember = []string{
+	ldapAttrMemberTiny = []string{
 		"uid", // uid
 		"cn",  // fullname
 	}
@@ -153,18 +153,7 @@ func (c *Conn) GetSquadMembers(group string, squad string) (*ldap.Entry, error) 
 	return ldapSquads[0], err
 }
 
-///////////////////////////
-
-func (c *Conn) GetGroup(group string) (*ldap.Entry, error) {
-	ldapGroups, err := c.getGroups(ldapAttrGroup, group)
-	return ldapGroups[0], err
-}
-
-func (c *Conn) GetSquad(squad string) (*ldap.Entry, error) {
-	return c.GetGroup(squad)
-}
-
-func (c *Conn) GetRoles(roles ...string) ([]*ldap.Entry, error) {
+func (c *Conn) getRoles(roles ...string) ([]*ldap.Entry, error) {
 	var filter string
 
 	// "(&(objectClass=rhatGroup)(|(cn=rhos-role1)(cn=rhos-role2)))"
@@ -178,10 +167,10 @@ func (c *Conn) GetRoles(roles ...string) ([]*ldap.Entry, error) {
 }
 
 func (c *Conn) GetAllRoles() ([]*ldap.Entry, error) {
-	return c.GetRoles()
+	return c.getRoles()
 }
 
-func (c *Conn) GetMembers(ids []string, full bool) ([]*ldap.Entry, error) {
+func (c *Conn) getPeople(ldapAttributes []string, ids []string) ([]*ldap.Entry, error) {
 	var filter string
 
 	// "(&(objectClass=rhatPerson)(|(uid=user1)(uid=user2)(uid=user3)))"
@@ -191,16 +180,24 @@ func (c *Conn) GetMembers(ids []string, full bool) ([]*ldap.Entry, error) {
 	}
 	filter = filter + "))"
 
-	if full {
-		return c.query(basednMembers, ldapAttrMemberFull, filter)
-	}
-	return c.query(basednMembers, ldapAttrMember, filter)
+	return c.query(basednMembers, ldapAttributes, filter)
 }
 
-func (c *Conn) GetMembersTiny(ids []string) ([]*ldap.Entry, error) {
-	return c.GetMembers(ids, false)
+func (c *Conn) GetPeopleTiny(ids []string) ([]*ldap.Entry, error) {
+	return c.getPeople(ldapAttrMemberTiny, ids)
 }
 
-func (c *Conn) GetMembersFull(ids []string) ([]*ldap.Entry, error) {
-	return c.GetMembers(ids, true)
+func (c *Conn) GetPeopleFull(ids []string) ([]*ldap.Entry, error) {
+	return c.getPeople(ldapAttrMemberFull, ids)
+}
+
+///////////////////////////
+
+func (c *Conn) GetGroup(group string) (*ldap.Entry, error) {
+	ldapGroups, err := c.getGroups(ldapAttrGroup, group)
+	return ldapGroups[0], err
+}
+
+func (c *Conn) GetSquad(squad string) (*ldap.Entry, error) {
+	return c.GetGroup(squad)
 }

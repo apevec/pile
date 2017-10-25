@@ -4,25 +4,115 @@ import (
 	ldap "gopkg.in/ldap.v2"
 )
 
+type role struct {
+	Name    string
+	Members []string
+}
+
 type Connection interface {
+	GetAllRoles() ([]*ldap.Entry, error)
 	GetAllGroupsTiny() ([]*ldap.Entry, error)
 	GetAllSquadsTiny(group string) ([]*ldap.Entry, error)
 	GetGroupMembers(group string) (*ldap.Entry, error)
 	GetSquadMembers(group string, squad string) (*ldap.Entry, error)
+	GetPeopleTiny(ids []string) ([]*ldap.Entry, error)
 }
 
-func GetGroupMembers(ldapc Connection, group string) (map[string]string, int, error) {
-	var members = make(map[string]string)
+func GetGroupHead(ldapc Connection, group string) (map[string][]map[string]string, error) {
+	var head = make(map[string][]map[string]string) // head["role"][...]["ID"] = uid
+
+	roles, err := GetRoles(ldapc)
+	if err != nil {
+		return head, err
+	}
+
+	var mapPeopleRole = make(map[string]string)
+	var mapPeopleName = make(map[string]string)
+	for _, role := range roles {
+		people, _ := GetPeople(ldapc, role.Members)
+		// TODO: handle error gracefully
+
+		for uid, name := range people {
+			mapPeopleRole[uid] = role.Name
+			mapPeopleName[uid] = name
+		}
+
+	}
+
+	groupMembers, err := GetGroupMembers(ldapc, group)
+	if err != nil {
+		return head, err
+	}
+	for _, uid := range groupMembers {
+		if _, ok := mapPeopleRole[uid]; !ok {
+			continue // skip members who doesn't belong to any role
+		}
+
+		role := mapPeopleRole[uid]
+		name := mapPeopleName[uid]
+		info := map[string]string{"ID": uid, "Name": name}
+
+		head[role] = append(head[role], info)
+	}
+
+	return head, err
+}
+
+func GetPeople(ldapc Connection, uids []string) (map[string]string, error) {
+	var people = make(map[string]string)
+
+	ldapPeople, err := ldapc.GetPeopleTiny(uids)
+	if err != nil {
+		return people, err
+	}
+	for _, ldapMan := range ldapPeople {
+		uid := ldapMan.GetAttributeValue("uid")
+		fullname := ldapMan.GetAttributeValue("cn")
+
+		people[uid] = fullname
+	}
+
+	return people, err
+}
+
+func GetRoles(ldapc Connection) (map[string]*role, error) {
+	var roles = map[string]*role{}
+
+	ldapRoles, err := ldapc.GetAllRoles()
+	if err != nil {
+		return roles, err
+	}
+
+	for _, ldapRole := range ldapRoles {
+		roleID := ldapRole.GetAttributeValue("cn")
+		roleName := ldapRole.GetAttributeValue("description")
+		roleMembers := ldapRole.GetAttributeValues("memberUid")
+
+		// TODO: find a better way for exclusions
+		if roleID != "rhos-steward" {
+			removeMe(&roleMembers)
+		}
+		roles[roleID] = &role{
+			Name:    roleName,
+			Members: roleMembers,
+		}
+	}
+
+	return roles, err
+}
+
+func GetGroupMembers(ldapc Connection, group string) ([]string, error) {
+	var members []string
 
 	ldapGroupMembers, err := ldapc.GetGroupMembers(group)
 	if err != nil {
-		return members, 0, err
+		return members, err
 	}
 	groupMembers := ldapGroupMembers.GetAttributeValues("memberUid")
 
 	squads, err := GetSquads(ldapc, group)
 	if err != nil {
-		return members, 0, err
+		return members, err
 	}
 	for squad := range squads {
 		ldapSquadMembers, _ := ldapc.GetSquadMembers(group, squad)
@@ -33,23 +123,30 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]string, int, er
 	}
 
 	removeDuplicates(&groupMembers)
-	for _, groupMember := range groupMembers {
-		members[groupMember] = "tbd: name"
-	}
 
-	return members, len(squads), err
+	// TODO: find a better way for exclusion
+	if (group != "rhos-dfg-cloud-applications") && (group != "rhos-dfg-portfolio-integration") {
+		removeMe(&groupMembers)
+	}
+	members = groupMembers
+
+	return members, err
 }
 
 func GetGroupSize(ldapc Connection, group string) (map[string]int, error) {
 	var size = make(map[string]int)
 
-	groupMembers, squads, err := GetGroupMembers(ldapc, group)
+	groupMembers, err := GetGroupMembers(ldapc, group)
+	if err != nil {
+		return size, err
+	}
+	squads, err := GetSquads(ldapc, group)
 	if err != nil {
 		return size, err
 	}
 
 	size["people"] = len(groupMembers)
-	size["squads"] = squads
+	size["squads"] = len(squads)
 
 	return size, err
 }
@@ -90,6 +187,20 @@ func GetGroups(ldapc Connection) (map[string]string, error) {
 	return groups, err
 }
 
+func Ping(ldapc Connection) (map[string]string, error) {
+	ldapMe, err := ldapc.GetPeopleTiny([]string{"aarapov"})
+	if err != nil {
+		return nil, err
+	}
+
+	pong := map[string]string{
+		"uid":  ldapMe[0].GetAttributeValue("uid"),
+		"name": ldapMe[0].GetAttributeValue("cn"),
+	}
+
+	return pong, err
+}
+
 // helpers
 func removeDuplicates(xs *[]string) {
 	found := make(map[string]bool)
@@ -102,4 +213,14 @@ func removeDuplicates(xs *[]string) {
 		}
 	}
 	*xs = (*xs)[:j]
+}
+
+func removeMe(xs *[]string) {
+	// TODO: temporary, remove aarapov
+	for i, me := range *xs {
+		if me == "aarapov" {
+			(*xs) = append((*xs)[:i], (*xs)[i+1:]...)
+			break
+		}
+	}
 }
