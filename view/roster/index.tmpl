@@ -32,6 +32,13 @@
 
 </div>
 
+<template id="tz">
+	<span>
+		<span v-if="tz.remote === 'true'">Remote</span>
+		<span>${country}</span>
+		<span>[${tz.utcOffset}]</span>
+	</span>
+</template>
 <template id="clock">
 	<span>
 		<span :title="tz.tzName"><i class="fa fa-clock-o"></i></span>
@@ -69,8 +76,7 @@
 					</span>
 				</td>
 				<td>
-					${member.Country}
-					<tz :uid="uid"></tz>
+					<tz :uid="uid" :country="member.Country"></tz>
 				</td>
 				<td>
 					<clock :uid="uid"></clock>
@@ -169,7 +175,8 @@
 		},
 	});
 	var GroupDetailsTZ = GroupDetailsClockTZ.extend({
-		template: '<span>[${tz.utcOffset}]</span>',
+		template: '#tz',
+		props: ['country'],
 		mounted: function() {
 			return
 		},

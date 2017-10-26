@@ -64,6 +64,7 @@ func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
 
 	tzinfo["utcOffset"] = utc
 	tzinfo["tzName"] = timezone
+	tzinfo["remote"] = strconv.FormatBool(remote)
 
 	return tzinfo, err
 }
