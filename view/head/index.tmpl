@@ -41,7 +41,7 @@
 			loading: true,
 		},
 		mounted: function() {
-			this.$http.get('/roster/v2/groups/heads').then(function(response) {
+			this.$http.get('/api/v2/groups/heads').then(function(response) {
 				this.heads = response.body;
 				this.loading = false;
 			})

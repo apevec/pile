@@ -6,6 +6,7 @@ import (
 	"github.com/arapov/pile/controller/debug"
 	"github.com/arapov/pile/controller/head"
 	"github.com/arapov/pile/controller/home"
+	"github.com/arapov/pile/controller/ldapxrest"
 	"github.com/arapov/pile/controller/login"
 	"github.com/arapov/pile/controller/notepad"
 	"github.com/arapov/pile/controller/register"
@@ -26,4 +27,5 @@ func LoadRoutes() {
 	notepad.Load()
 	roster.Load()
 	head.Load()
+	ldapxrest.Load()
 }

@@ -136,7 +136,7 @@
 			};
 		},
 		mounted: function() {
-			this.$http.get('roster/v2/people/' + this.uid + '/tz').then(function(response) {
+			this.$http.get('api/v2/people/' + this.uid + '/tz').then(function(response) {
 				this.tz = response.body
 			});
 		},
@@ -200,7 +200,7 @@
 			},
 		},
 		mounted: function() {
-			this.$http.get('roster/v2/groups/' + this.gid + '/members').then(function(response) {
+			this.$http.get('api/v2/groups/' + this.gid + '/members').then(function(response) {
 				this.members = response.body
 			});
 		},
@@ -234,7 +234,7 @@
 			};
 		},
 		mounted: function() {
-			this.$http.get('roster/v2/groups/' + this.gid).then(function(response) {
+			this.$http.get('api/v2/groups/' + this.gid).then(function(response) {
 				this.grouphead = response.body.Head
 				this.grouplinks = response.body.Links
 				this.groupsize = response.body.Size
@@ -250,7 +250,7 @@
 			active: "",
 		},
 		mounted: function() {
-			this.$http.get('/roster/v2/groups').then(function(response) {
+			this.$http.get('/api/v2/groups').then(function(response) {
 				this.groups = response.body;
 			});
 		},
