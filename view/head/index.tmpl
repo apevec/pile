@@ -20,11 +20,11 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="item in head">
-					<td>${item.GroupName}</td>
-					<td>${item.Role}</td>
-					<td><a :href="'https://rover.redhat.com/people/profile/' + item.UID + '/'">${item.Name}</a></td>
-					<td>${item.UID}@redhat.com</td>
+				<tr v-for="head in heads">
+					<td>${head.group}</td>
+					<td>${head.role}</td>
+					<td><a :href="'https://rover.redhat.com/people/profile/' + head.uid + '/'">${head.name}</a></td>
+					<td>${head.uid}@redhat.com</td>
 				</tr>
 			</tbody>
 		</table>
@@ -36,11 +36,11 @@
 		el: '#head',
 		delimiters: ['${', '}'],
 		data: {
-			head: [],
+			heads: [],
 		},
 		mounted: function() {
-			this.$http.get('/roster/v1/head').then(function(response) {
-				this.head = response.body
+			this.$http.get('/roster/v2/groups/heads').then(function(response) {
+				this.heads = response.body
 			})
 		},
 		updated: function() {

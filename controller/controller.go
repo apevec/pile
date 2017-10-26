@@ -4,6 +4,7 @@ package controller
 import (
 	"github.com/arapov/pile/controller/about"
 	"github.com/arapov/pile/controller/debug"
+	"github.com/arapov/pile/controller/head"
 	"github.com/arapov/pile/controller/home"
 	"github.com/arapov/pile/controller/login"
 	"github.com/arapov/pile/controller/notepad"
@@ -24,5 +25,5 @@ func LoadRoutes() {
 	status.Load()
 	notepad.Load()
 	roster.Load()
-	//	head.Load()
+	head.Load()
 }
