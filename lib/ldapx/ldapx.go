@@ -38,12 +38,13 @@ var (
 		"cn",  // fullname
 	}
 	ldapAttrMemberFull = []string{
-		"uid",            // uid
-		"cn",             // fullname
-		"co",             // country
-		"rhatBio",        // notes/bio
-		"rhatNickName",   // irc nick
-		"rhatCostCenter", // cost center
+		"uid",                // uid
+		"cn",                 // fullname
+		"co",                 // country
+		"rhatBio",            // notes/bio
+		"rhatNickName",       // irc nick
+		"rhatCostCenter",     // cost center
+		"rhatOfficeLocation", // describes REMOTE
 	}
 	ldapAttrMemberLocation = []string{
 		"uid",                // uid

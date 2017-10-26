@@ -26,6 +26,7 @@ type member struct {
 	IRC     string
 	Country string
 	CC      string
+	Remote  bool
 }
 
 type Connection interface {
@@ -115,6 +116,11 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 		co := man.GetAttributeValue("co")
 		cc := man.GetAttributeValue("rhatCostCenter")
 
+		remote := false
+		if man.GetAttributeValue("rhatOfficeLocation") == "REMOTE" {
+			remote = true
+		}
+
 		role := "Engineer"
 		if _, ok := mapPeopleRole[uid]; ok {
 			role = mapPeopleRole[uid]
@@ -133,6 +139,7 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 			IRC:     ircnick,
 			Country: co,
 			CC:      cc,
+			Remote:  remote,
 		}
 
 	}
