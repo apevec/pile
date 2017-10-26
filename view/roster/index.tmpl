@@ -14,16 +14,8 @@
 	</div>
 
 	<div v-for="(group, gid) in groups" class="panel panel-default">
-		<div :id="gid" class="panel-heading">
-			<h2 class="panel-title">
-				<span>${group}</span>
-				<group-title :gid="gid"></group-title>
-			</h2>
-		</div>
 
-		<div class="panel-body">
-			<group-head :gid="gid"></group-head>
-		</div>
+		<group-info :gid="gid" :group="group"></group-info>
 
 		<keep-alive>
 			<group-details v-if="active == gid" :gid="gid"></group-details>
@@ -33,6 +25,7 @@
 			<i class="fa fa-chevron-down"></i>
 		</button>
 
+		<!-- this makes details button to be within the panel, otherwise it drops under -->
 		<div class="clearfix"></div>
 
 	</div>
@@ -56,7 +49,7 @@
 				<th>Component</th>
 				<th>IRC</th>
 				<th>External</th>
-				<th>Country</th>
+				<th>Location [UTC]</th>
 				<th class="no-sort">Time</th>
 			</tr>
 		</thead>
@@ -75,7 +68,10 @@
 						<!-- span v-if="name == 'Link'"><i class="fa fa-link" title="Link"> ${link} </i></span -->
 					</span>
 				</td>
-				<td>${member.Country}</td>
+				<td>
+					${member.Country}
+					<tz :uid="uid"></tz>
+				</td>
 				<td>
 					<clock :uid="uid"></clock>
 				</td>
@@ -84,50 +80,67 @@
 	</table>
 </template>
 
-<template id="group-head">
-	<div class="container-fluid">
-		<div class="row">
-			<div class="col-md-2">
-				<div v-for="(link, name) in grouplinks">
-					<i v-if="name == 'Backlog'" class="fa fa-tasks"></i>
-					<i v-else-if="name == 'Mission'" class="fa fa-bullseye"></i>
-					<i v-else class="fa fa-link"></i>
-					<a :href="link">${name}</a>
+<template id="group-info">
+<div class="panel-default">
+	<div :id="gid" class="panel-heading">
+		<h2 class="panel-title">
+			<span>${group}</span>
+			<span class="pull-right">
+				<span v-if="groupsize.squads" title="Squads"><i class="fa fa-users"></i> ${groupsize.squads}</span>
+				<span title="People"><i class="fa fa-user-circle-o"></i> ${groupsize.people}</span>
+			</span>
+		</h2>
+	</div>
+	<div class="panel-body">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-2">
+					<div v-for="(link, name) in grouplinks">
+						<i v-if="name == 'Backlog'" class="fa fa-tasks"></i>
+						<i v-else-if="name == 'Mission'" class="fa fa-bullseye"></i>
+						<i v-else class="fa fa-link"></i>
+						<a :href="link">${name}</a>
+					</div>
 				</div>
-			</div>
-			<div class="col-md-5">
-				<div v-for="(role, id) in grouphead" v-if="id == 'Steward' || id == 'Product Manager'">
-					<strong>${id}<span v-if="role.length > 1">s</span>:</strong>
-					<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
+				<div class="col-md-5">
+					<div v-for="(role, id) in grouphead" v-if="id == 'Steward' || id == 'Product Manager'">
+						<strong>${id}<span v-if="role.length > 1">s</span>:</strong>
+						<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
+					</div>
 				</div>
-			</div>
-			<div class="col-md-5">
-				<div v-for="(role, id) in grouphead" v-if="id == 'User Advocate' || id == 'Team Catalyst' || id == 'Squad Lead'">
-					<strong>${id}<span v-if="role.length > 1">s</span>:</strong>
-					<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
+				<div class="col-md-5">
+					<div v-for="(role, id) in grouphead" v-if="id == 'User Advocate' || id == 'Team Catalyst' || id == 'Squad Lead'">
+						<strong>${id}<span v-if="role.length > 1">s</span>:</strong>
+						<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-</template>
-
-<template id="group-title">
-	<span class="pull-right">
-		<span v-if="groupsize.squads" title="Squads"><i class="fa fa-users"></i> ${groupsize.squads}</span>
-		<span title="People"><i class="fa fa-user-circle-o"></i> ${groupsize.people}</span>
-	</span>
+</div>
 </template>
 
 <script type="text/javascript">
-	var GroupDetailsClock = {
-		template: '#clock',
+	var GroupDetailsClockTZ = Vue.extend({
 		delimiters: ['${', '}'],
 		props: ['uid'],
 		data: function() {
 			return {
+				tz: [],
+			};
+		},
+		mounted: function() {
+			this.$http.get('roster/v2/people/' + this.uid + '/tz').then(function(response) {
+				this.tz = response.body
+			});
+		},
+	});
+	var GroupDetailsClock = GroupDetailsClockTZ.extend({
+		template: '#clock',
+		data: function() {
+			return {
 				time: '',
 				date: '',
-				tz: [],
 			};
 		},
 		computed: {
@@ -149,15 +162,18 @@
 			},
 		},
 		mounted: function() {
-			this.$http.get('roster/v2/people/' + this.uid + '/tz').then(function(response) {
-				this.tz = response.body
-			});
 			this.interval = setInterval(this.calcTime, 1000);
 		},
 		beforeDestroy: function() {
 			clearInterval(this.interval);
 		},
-	};
+	});
+	var GroupDetailsTZ = GroupDetailsClockTZ.extend({
+		template: '<span>[${tz.utcOffset}]</span>',
+		mounted: function() {
+			return
+		},
+	});
 
 	var GroupDetails = {
 		template: '#group-details',
@@ -195,41 +211,26 @@
 		},
 		components: {
 			'clock': GroupDetailsClock,
+			'tz': GroupDetailsTZ,
 		},
 	};
 
-	var GroupHead = {
-		template: '#group-head',
+	var GroupInfo = {
+		template: '#group-info',
 		delimiters: ['${', '}'],
-		props: ['gid'],
+		props: ['gid', 'group'],
 		data: function() {
 			return {
 				grouphead: [],
 				grouplinks: [],
-			};
-		},
-		mounted: function() {
-			this.$http.get('roster/v2/groups/' + this.gid + '/head').then(function(response) {
-				this.grouphead = response.body
-			});
-			this.$http.get('roster/v2/groups/' + this.gid + '/links').then(function(response) {
-				this.grouplinks = response.body
-			});
-		},
-	};
-
-	var GroupTitle = {
-		template: '#group-title',
-		delimiters: ['${', '}'],
-		props: ['gid'],
-		data: function() {
-			return {
 				groupsize: [],
 			};
 		},
 		mounted: function() {
-			this.$http.get('roster/v2/groups/' + this.gid + '/size').then(function(response) {
-				this.groupsize = response.body;
+			this.$http.get('roster/v2/groups/' + this.gid).then(function(response) {
+				this.grouphead = response.body.Head
+				this.grouplinks = response.body.Links
+				this.groupsize = response.body.Size
 			});
 		},
 	};
@@ -252,8 +253,7 @@
 			},
 		},
 		components: {
-			'group-title': GroupTitle,
-			'group-head': GroupHead,
+			'group-info': GroupInfo,
 			'group-details': GroupDetails,
 		},
 	});

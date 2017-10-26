@@ -25,10 +25,36 @@ func Load() {
 	router.Get(uri+"/v2/people/:uid/tz", GetTimezoneInfo)
 
 	router.Get(uri+"/v2/groups", GetGroups)
+	router.Get(uri+"/v2/groups/:group", GetGroup)
 	router.Get(uri+"/v2/groups/:group/size", GetGroupSize)
 	router.Get(uri+"/v2/groups/:group/head", GetGroupHead)
 	router.Get(uri+"/v2/groups/:group/links", GetGroupLinks)
 	router.Get(uri+"/v2/groups/:group/members", GetGroupMembers)
+}
+
+func GetGroup(w http.ResponseWriter, r *http.Request) {
+	c := flight.Context(w, r)
+	w.Header().Set("Content-Type", "application/json")
+
+	type info struct {
+		Links map[string]string
+		Head  map[string][]map[string]string
+		Size  map[string]int
+	}
+
+	group := c.Param("group")
+	links, _ := ldapxrest.GetGroupLinks(c.LDAP, group)
+	head, _ := ldapxrest.GetGroupHead(c.LDAP, group)
+	size, _ := ldapxrest.GetGroupSize(c.LDAP, group)
+
+	groupInfo := &info{
+		Links: links,
+		Head:  head,
+		Size:  size,
+	}
+
+	js, _ := json.Marshal(groupInfo)
+	w.Write(js)
 }
 
 func GetTimezoneInfo(w http.ResponseWriter, r *http.Request) {
