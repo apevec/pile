@@ -136,6 +136,8 @@
 			};
 		},
 		mounted: function() {
+			// TODO: this called twice, which is redundant
+			// from <clock> and <tz>. Fix it!
 			this.$http.get('api/v2/people/' + this.uid + '/tz').then(function(response) {
 				this.tz = response.body
 			});
@@ -177,9 +179,6 @@
 	var GroupDetailsTZ = GroupDetailsClockTZ.extend({
 		template: '#tz',
 		props: ['country'],
-		mounted: function() {
-			return
-		},
 	});
 
 	var GroupDetails = {
