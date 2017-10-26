@@ -20,6 +20,7 @@
 				</tr>
 			</thead>
 			<tbody>
+				<tr v-if="loading"><td colspan="4" bgcolor="orange"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
 				<tr v-for="head in heads">
 					<td>${head.group}</td>
 					<td>${head.role}</td>
@@ -37,15 +38,17 @@
 		delimiters: ['${', '}'],
 		data: {
 			heads: [],
+			loading: true,
 		},
 		mounted: function() {
 			this.$http.get('/roster/v2/groups/heads').then(function(response) {
-				this.heads = response.body
+				this.heads = response.body;
+				this.loading = false;
 			})
 		},
 		updated: function() {
-			$('#datatable').DataTable({paging: false})
-		}
+			$('#datatable').DataTable({paging: false});
+		},
 	});
 </script>
 
