@@ -57,7 +57,7 @@ func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
 
 	latlng := ldapLocation.GetAttributeValue("registeredAddress")
 	location := ldapLocation.GetAttributeValue("rhatLocation")
-	utc, timezone, err := getTimeZone(latlng, location, remote)
+	utc, timezone, lat, lng, err := getTimeZone(latlng, location, remote)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +65,7 @@ func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
 	tzinfo["utcOffset"] = utc
 	tzinfo["tzName"] = timezone
 	tzinfo["remote"] = strconv.FormatBool(remote)
+	tzinfo["latlng"] = strconv.FormatFloat(lat, 'f', -1, 64) + "," + strconv.FormatFloat(lng, 'f', -1, 64)
 
 	return tzinfo, err
 }
@@ -373,7 +374,7 @@ func decodeNote(note string) map[string]string {
 	return result
 }
 
-func getTimeZone(latlng string, location string, remote bool) (string, string, error) {
+func getTimeZone(latlng string, location string, remote bool) (string, string, float64, float64, error) {
 	utc := ""
 	timezone := ""
 
@@ -386,7 +387,7 @@ func getTimeZone(latlng string, location string, remote bool) (string, string, e
 	mapsc, err := maps.NewClient(maps.WithAPIKey(gapi))
 	if err != nil {
 		log.Println(err)
-		return utc, timezone, err
+		return utc, timezone, 0, 0, err
 	}
 
 	var lat float64
@@ -406,7 +407,7 @@ func getTimeZone(latlng string, location string, remote bool) (string, string, e
 		loc, err := mapsc.Geocode(context.Background(), r)
 		if err != nil {
 			log.Println(err)
-			return utc, timezone, err
+			return utc, timezone, 0, 0, err
 		}
 
 		lat = loc[0].Geometry.Location.Lat
@@ -426,7 +427,7 @@ func getTimeZone(latlng string, location string, remote bool) (string, string, e
 	tz, err := mapsc.Timezone(context.Background(), r)
 	if err != nil {
 		log.Println(err)
-		return utc, timezone, err
+		return utc, timezone, 0, 0, err
 	}
 
 	utcOffset := (tz.RawOffset + tz.DstOffset) / 3600
@@ -436,5 +437,5 @@ func getTimeZone(latlng string, location string, remote bool) (string, string, e
 	}
 	timezone = tz.TimeZoneName
 
-	return utc, timezone, err
+	return utc, timezone, lat, lng, err
 }
