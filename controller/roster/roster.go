@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/arapov/pile/controller/ldapxrest"
 	"github.com/arapov/pile/lib/flight"
+	"github.com/arapov/pile/model/ldapxrest"
 
 	"github.com/blue-jay/core/router"
 )
