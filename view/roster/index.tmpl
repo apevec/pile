@@ -32,17 +32,11 @@
 
 </div>
 
-<template id="tz">
-	<span>
-		<span v-if="tz.remote === 'true'">Remote</span>
-		<span>${country}</span>
-		<span>[${tz.utcOffset}]</span>
-	</span>
-</template>
 <template id="clock">
 	<span>
-		<span :title="tz.tzName"><i class="fa fa-clock-o"></i></span>
+		<span><i class="fa fa-clock-o fa-fw"></i></span>
 		<span :title="title">${time}</span>
+		<span> UTC${tz.utcOffset}</span>
 	</span>
 </template>
 
@@ -56,7 +50,7 @@
 				<th>Component</th>
 				<th class="no-sort">IRC</th>
 				<th class="no-sort">External</th>
-				<th class="no-sort">Location [UTC]</th>
+				<th>Location</th>
 				<th class="no-sort">Time</th>
 			</tr>
 		</thead>
@@ -75,9 +69,7 @@
 						<!-- span v-if="name == 'Link'"><i class="fa fa-link" title="Link"> ${link} </i></span -->
 					</span>
 				</td>
-				<td>
-					<tz :uid="uid" :country="member.Country"></tz>
-				</td>
+				<td>${member.Country}</td>
 				<td>
 					<clock :uid="uid"></clock>
 				</td>
@@ -127,26 +119,13 @@
 </template>
 
 <script type="text/javascript">
-	var GroupDetailsClockTZ = Vue.extend({
+	var GroupDetailsClock = {
 		delimiters: ['${', '}'],
+		template: '#clock',
 		props: ['uid'],
 		data: function() {
 			return {
 				tz: [],
-			};
-		},
-		mounted: function() {
-			// TODO: this called twice, which is redundant
-			// from <clock> and <tz>. Fix it!
-			this.$http.get('api/v2/people/' + this.uid + '/tz').then(function(response) {
-				this.tz = response.body
-			});
-		},
-	});
-	var GroupDetailsClock = GroupDetailsClockTZ.extend({
-		template: '#clock',
-		data: function() {
-			return {
 				time: '',
 				date: '',
 			};
@@ -154,8 +133,7 @@
 		computed: {
 			title: function() {
 				return this.date + '\n'
-					 + this.tz.tzName + '\n'
-					 + 'UTC' + this.tz.utcOffset;
+					 + this.tz.tzName + '\n';
 			},
 		},
 		methods: {
@@ -165,21 +143,20 @@
 				var nd = new Date(utc + (3600000 * this.tz.utcOffset));
 				var options_time = { hour: 'numeric', minute: 'numeric', second: 'numeric' };
 				var options_date = { month: 'short', day: 'numeric', year: 'numeric' };
-				this.time = Intl.DateTimeFormat('en-US', options_time).format(nd);
+				this.time = Intl.DateTimeFormat('en-GB', options_time).format(nd);
 				this.date = Intl.DateTimeFormat('en-US', options_date).format(nd);
 			},
 		},
 		mounted: function() {
+			this.$http.get('api/v2/people/' + this.uid + '/tz').then(function(response) {
+				this.tz = response.body
+			});
 			this.interval = setInterval(this.calcTime, 1000);
 		},
 		beforeDestroy: function() {
 			clearInterval(this.interval);
 		},
-	});
-	var GroupDetailsTZ = GroupDetailsClockTZ.extend({
-		template: '#tz',
-		props: ['country'],
-	});
+	};
 
 	var GroupDetails = {
 		template: '#group-details',
@@ -217,7 +194,6 @@
 		},
 		components: {
 			'clock': GroupDetailsClock,
-			'tz': GroupDetailsTZ,
 		},
 	};
 
