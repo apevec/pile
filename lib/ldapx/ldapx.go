@@ -106,7 +106,7 @@ func (c *Conn) getGroups(ldapAttributes []string, groups ...string) ([]*ldap.Ent
 
 	// "(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))"
 	filter = "(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))"
-	if len(groups) > 0 {
+	if len(groups) > 0 && groups[0] != "" {
 		filter = "(&(objectClass=rhatGroup)(&"
 		for _, group := range groups {
 			filter += fmt.Sprintf("(cn=%s)", group)
@@ -117,12 +117,12 @@ func (c *Conn) getGroups(ldapAttributes []string, groups ...string) ([]*ldap.Ent
 	return c.query(basednGroups, ldapAttributes, filter)
 }
 
-func (c *Conn) GetAllGroups() ([]*ldap.Entry, error) {
-	return c.getGroups(ldapAttrGroup)
+func (c *Conn) GetGroupsTiny(groups ...string) ([]*ldap.Entry, error) {
+	return c.getGroups(ldapAttrGroupTiny, groups...)
 }
 
-func (c *Conn) GetAllGroupsTiny() ([]*ldap.Entry, error) {
-	return c.getGroups(ldapAttrGroupTiny)
+func (c *Conn) GetAllGroups() ([]*ldap.Entry, error) {
+	return c.getGroups(ldapAttrGroup)
 }
 
 func (c *Conn) GetGroupMembers(group string) (*ldap.Entry, error) {

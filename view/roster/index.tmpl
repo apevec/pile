@@ -85,8 +85,8 @@
 		<h2 class="panel-title">
 			<span>${group}</span>
 			<span class="pull-right">
-				<span v-if="groupsize.squads" title="Squads"><i class="fa fa-users"></i> ${groupsize.squads}</span>
-				<span title="People"><i class="fa fa-user-circle-o"></i> ${groupsize.people}</span>
+				<span v-if="groupinfo.Size.squads" title="Squads"><i class="fa fa-users"></i> ${groupinfo.Size.squads}</span>
+				<span title="People"><i class="fa fa-user-circle-o"></i> ${groupinfo.Size.people}</span>
 			</span>
 		</h2>
 	</div>
@@ -94,7 +94,7 @@
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-md-2">
-					<div v-for="(link, name) in grouplinks">
+					<div v-for="(link, name) in groupinfo.Links">
 						<i v-if="name == 'Backlog'" class="fa fa-tasks"></i>
 						<i v-else-if="name == 'Mission'" class="fa fa-bullseye"></i>
 						<i v-else class="fa fa-link"></i>
@@ -102,13 +102,13 @@
 					</div>
 				</div>
 				<div class="col-md-5">
-					<div v-for="(role, id) in grouphead" v-if="id == 'Steward' || id == 'Product Manager'">
+					<div v-for="(role, id) in groupinfo.Head" v-if="id == 'Steward' || id == 'Product Manager'">
 						<strong>${id}<span v-if="role.length > 1">s</span>:</strong>
 						<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
 					</div>
 				</div>
 				<div class="col-md-5">
-					<div v-for="(role, id) in grouphead" v-if="id == 'User Advocate' || id == 'Team Catalyst' || id == 'Squad Lead'">
+					<div v-for="(role, id) in groupinfo.Head" v-if="id == 'User Advocate' || id == 'Team Catalyst' || id == 'Squad Lead'">
 						<strong>${id}<span v-if="role.length > 1">s</span>:</strong>
 						<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
 					</div>
@@ -124,7 +124,7 @@
 		delimiters: ['${', '}'],
 		template: '#clock',
 		props: ['uid'],
-		data: function() {
+		data() {
 			return {
 				tz: [],
 				time: '',
@@ -132,29 +132,26 @@
 			};
 		},
 		computed: {
-			title: function() {
-				return this.date + '\n'
-					 + this.tz.tzName + '\n';
+			title() {
+				return this.date + '\n' + this.tz.tzName + '\n';
 			},
 		},
 		methods: {
-			calcTime: function () {
-				var d = new Date();
-				var utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-				var nd = new Date(utc + (3600000 * this.tz.utcOffset));
-				var options_time = { hour: 'numeric', minute: 'numeric', second: 'numeric' };
-				var options_date = { month: 'short', day: 'numeric', year: 'numeric' };
-				this.time = Intl.DateTimeFormat('en-GB', options_time).format(nd);
+			calcTime() {
+				const d = new Date();
+				const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+				const nd = new Date(utc + (3600000 * this.tz.utcOffset));
+				const options_time = { hour: 'numeric', minute: 'numeric', second: 'numeric' };
+				const options_date = { month: 'short', day: 'numeric', year: 'numeric' };
+				this.time = Intl.DateTimeFormat('en-US', options_time).format(nd);
 				this.date = Intl.DateTimeFormat('en-US', options_date).format(nd);
 			},
 		},
-		mounted: function() {
-			this.$http.get('api/v2/people/' + this.uid + '/tz').then(function(response) {
-				this.tz = response.body
-			});
+		async mounted() {
+			this.tz = (await this.$http.get('/api/v2/people/' + this.uid + '/tz')).body;
 			this.interval = setInterval(this.calcTime, 1000);
 		},
-		beforeDestroy: function() {
+		beforeDestroy() {
 			clearInterval(this.interval);
 		},
 	};
@@ -163,25 +160,23 @@
 		template: '#group-details',
 		delimiters: ['${', '}'],
 		props: ['gid'],
-		data: function() {
+		data() {
 			return {
 				members: [],
 			};
 		},
 		computed: {
-			squads: function() {
+			squads() {
 				for (uid in this.members) {
 					if (this.members[uid].Squad != '') return true;
 				};
 				return false;
 			},
 		},
-		mounted: function() {
-			this.$http.get('api/v2/groups/' + this.gid + '/members').then(function(response) {
-				this.members = response.body
-			});
+		async mounted() {
+			this.members = (await this.$http.get('/api/v2/groups/' + this.gid + '/members')).body;
 		},
-		updated: function() {
+		updated() {
 			$('#datatable').DataTable({
 				searching: false,
 				paging: false,
@@ -190,7 +185,7 @@
 				"columnDefs": [{
 					"targets": 'no-sort',
 					"orderable": false,
-					}]
+					}],
 				});
 		},
 		components: {
@@ -202,19 +197,17 @@
 		template: '#group-info',
 		delimiters: ['${', '}'],
 		props: ['gid', 'group'],
-		data: function() {
+		data() {
 			return {
-				grouphead: [],
-				grouplinks: [],
-				groupsize: [],
+				groupinfo: {
+					Size: {},
+					Links: {},
+					Head: {},
+				},
 			};
 		},
-		mounted: function() {
-			this.$http.get('api/v2/groups/' + this.gid).then(function(response) {
-				this.grouphead = response.body.Head
-				this.grouplinks = response.body.Links
-				this.groupsize = response.body.Size
-			});
+		async mounted() {
+			this.groupinfo = (await this.$http.get('/api/v2/groups/' + this.gid + '/info')).body;
 		},
 	};
 
@@ -225,14 +218,17 @@
 			groups: [],
 			active: "",
 		},
-		mounted: function() {
-			this.$http.get('/api/v2/groups').then(function(response) {
-				this.groups = response.body;
-			});
+		async mounted() {
+			{{- if .group}}
+			this.groups = (await this.$http.get('/api/v2/groups/{{.group}}')).body;
+			this.showDetails('{{.group}}')
+			{{- else -}}
+			this.groups = (await this.$http.get('/api/v2/groups')).body;
+			{{end}}
 		},
 		methods: {
-			showDetails: function(group) {
-				this.active = group
+			showDetails(group) {
+				this.active = group;
 			},
 		},
 		components: {

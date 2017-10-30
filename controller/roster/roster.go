@@ -15,13 +15,16 @@ var (
 
 // Load the routes.
 func Load() {
-	//c := router.Chain(acl.DisallowAnon)
-	router.Get(uri, Index) //, c...)
+	router.Get(uri, Index)
+	router.Get(uri+"/:group", Index)
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 
+	group := c.Param("group")
 	v := c.View.New("roster/index")
+	v.Vars["group"] = group
+
 	v.Render(w, r)
 }

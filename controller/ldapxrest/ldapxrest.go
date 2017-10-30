@@ -18,10 +18,11 @@ func Load() {
 	router.Get("/ping", Ping)
 
 	router.Get(uri+"/v2/people/:uid/tz", GetTimezoneInfo)
+	router.Get(uri+"/v2/groups/heads", GetHeads)
 
 	router.Get(uri+"/v2/groups", GetGroups)
-	router.Get(uri+"/v2/groups/heads", GetHeads)
-	router.Get(uri+"/v2/groups/:group", GetGroup)
+	router.Get(uri+"/v2/groups/:group", GetGroups)
+	router.Get(uri+"/v2/groups/:group/info", GetGroupInfo)
 	router.Get(uri+"/v2/groups/:group/size", GetGroupSize)
 	router.Get(uri+"/v2/groups/:group/head", GetGroupHead)
 	router.Get(uri+"/v2/groups/:group/links", GetGroupLinks)
@@ -80,7 +81,7 @@ func GetHeads(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-func GetGroup(w http.ResponseWriter, r *http.Request) {
+func GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
@@ -164,7 +165,8 @@ func GetGroups(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
-	groups, _ := ldapxrest.GetGroups(c.LDAP)
+	group := c.Param("group")
+	groups, _ := ldapxrest.GetGroups(c.LDAP, group)
 	js, _ := json.Marshal(groups)
 
 	w.Write(js)

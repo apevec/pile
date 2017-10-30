@@ -31,7 +31,6 @@ type member struct {
 
 type Connection interface {
 	GetAllRoles() ([]*ldap.Entry, error)
-	GetAllGroupsTiny() ([]*ldap.Entry, error)
 	GetAllSquadsTiny(group string) ([]*ldap.Entry, error)
 	GetGroupMembers(group string) (*ldap.Entry, error)
 	GetSquadMembers(group string, squad string) (*ldap.Entry, error)
@@ -39,6 +38,7 @@ type Connection interface {
 	GetPeopleFull(ids []string) ([]*ldap.Entry, error)
 	GetPeopleLocationData(ids ...string) ([]*ldap.Entry, error)
 	GetGroupLinks(group string) (*ldap.Entry, error)
+	GetGroupsTiny(groups ...string) ([]*ldap.Entry, error)
 }
 
 func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
@@ -310,22 +310,22 @@ func GetSquads(ldapc Connection, group string) (map[string]string, error) {
 	return squads, err
 }
 
-func GetGroups(ldapc Connection) (map[string]string, error) {
-	var groups = make(map[string]string)
+func GetGroups(ldapc Connection, groups ...string) (map[string]string, error) {
+	var res = make(map[string]string)
 
-	ldapGroups, err := ldapc.GetAllGroupsTiny()
+	ldapGroups, err := ldapc.GetGroupsTiny(groups...)
 	if err != nil {
-		return groups, err
+		return res, err
 	}
 
 	for _, ldapGroup := range ldapGroups {
 		groupName := ldapGroup.GetAttributeValue("cn")
 		groupDesc := ldapGroup.GetAttributeValue("description")
 
-		groups[groupName] = groupDesc
+		res[groupName] = groupDesc
 	}
 
-	return groups, err
+	return res, err
 }
 
 func Ping(ldapc Connection) (map[string]string, error) {
