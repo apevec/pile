@@ -215,16 +215,15 @@
 		el: '#roster',
 		delimiters: ['${', '}'],
 		data: {
-			groups: [],
-			active: "",
+			groups: {},
+			active: '{{.group}}',
 		},
 		async mounted() {
-			{{- if .group}}
-			this.groups = (await this.$http.get('/api/v2/groups/{{.group}}')).body;
-			this.showDetails('{{.group}}')
-			{{- else -}}
-			this.groups = (await this.$http.get('/api/v2/groups')).body;
-			{{end}}
+			let urlAPI = '/api/v2/groups'
+			if (this.active != '')
+				urlAPI += '/'+this.active;
+
+			this.groups = (await this.$http.get(urlAPI)).body;
 		},
 		methods: {
 			showDetails(group) {
