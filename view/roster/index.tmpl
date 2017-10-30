@@ -7,27 +7,29 @@
 
 <div id="roster">
 
+	<!-- groups cloud -->
 	<div class="page-header">
 		<span v-for="(group, gid) in groups">
 			[<a :href="'#' + gid">${group}</a>]
 		</span>
 	</div>
 
+	<!-- group card -->
 	<div v-for="(group, gid) in groups" class="panel panel-default">
-
+		<!-- gc: header -->
 		<group-info :gid="gid" :group="group"></group-info>
 
+		<!-- gc: details table -->
 		<keep-alive>
 			<group-details v-if="active == gid" :gid="gid"></group-details>
 		</keep-alive>
 
+		<!-- gc: show details button -->
 		<button v-if="active != gid" v-on:click="showDetails(gid)" class="btn btn-default pull-right form-control" type="button">
 			<i class="fa fa-chevron-down"></i>
 		</button>
-
 		<!-- this makes details button to be within the panel, otherwise it drops under -->
 		<div class="clearfix"></div>
-
 	</div>
 
 </div>
