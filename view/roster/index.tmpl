@@ -141,7 +141,7 @@
 				const d = new Date();
 				const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
 				const nd = new Date(utc + (3600000 * this.tz.utcOffset));
-				const options_time = { hour: 'numeric', minute: 'numeric', second: 'numeric' };
+				const options_time = { hour: 'numeric', minute: 'numeric' };
 				const options_date = { month: 'short', day: 'numeric', year: 'numeric' };
 				this.time = Intl.DateTimeFormat('en-US', options_time).format(nd);
 				this.date = Intl.DateTimeFormat('en-US', options_date).format(nd);
@@ -149,7 +149,8 @@
 		},
 		async mounted() {
 			this.tz = (await this.$http.get('/api/v2/people/' + this.uid + '/tz')).body;
-			this.interval = setInterval(this.calcTime, 1000);
+			this.interval = setInterval(this.calcTime, 60000);
+			this.calcTime();
 		},
 		beforeDestroy() {
 			clearInterval(this.interval);
