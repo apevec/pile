@@ -8,7 +8,7 @@
 <div id="roster">
 
 	<!-- groups cloud -->
-	<div class="page-header">
+	<div v-if="Object.keys(groups).length > 1" class="page-header">
 		<span v-for="(group, gid) in groups">
 			[<a :href="'#' + gid">${group}</a>]
 		</span>
