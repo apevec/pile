@@ -21,7 +21,7 @@
 
 		<!-- gc: details table -->
 		<keep-alive>
-			<group-details v-if="active == gid" :gid="gid"></group-details>
+			<component v-if="active == gid" :gid="gid" :is="details"></component>
 		</keep-alive>
 
 		<!-- gc: show details button -->
@@ -35,9 +35,9 @@
 </div>
 
 <template id="clock">
-	<span>
+	<span :title="title">
 		<span><i class="fa fa-clock-o fa-fw"></i></span>
-		<span :title="title">${time}</span>
+		<span>${time}</span>
 		<span> UTC${tz.utcOffset}</span>
 	</span>
 </template>
@@ -220,6 +220,7 @@
 		data: {
 			groups: {},
 			active: '{{.group}}',
+			details: 'group-details-table',
 		},
 		async mounted() {
 			let urlAPI = '/api/v2/groups'
@@ -235,7 +236,7 @@
 		},
 		components: {
 			'group-info': GroupInfo,
-			'group-details': GroupDetails,
+			'group-details-table': GroupDetails,
 		},
 	});
 </script>
