@@ -104,6 +104,13 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 	for squad, squadName := range squads {
 		squadMembers, _ := GetGroupMembersSlice(ldapc, squad)
 		for _, squadMember := range squadMembers {
+
+			if mapPeopleRole[squadMember] == "Steward" {
+				// We don't want Steward to be a member of any squad.
+				// So we skip squad assignment here
+				continue
+			}
+
 			mapPeopleSquad[squadMember] = squadName
 		}
 	}
