@@ -193,6 +193,11 @@ func GetGroupLinks(ldapc Connection, group string) (map[string]string, error) {
 func GetGroupHead(ldapc Connection, group string) (map[string][]map[string]string, error) {
 	var head = make(map[string][]map[string]string) // head["role"][...]["ID"] = uid
 
+	// LT team is special and outlier
+	if group == "rhos-dfg-lt" {
+		return head, nil
+	}
+
 	roles, err := GetRoles(ldapc)
 	if err != nil {
 		return head, err

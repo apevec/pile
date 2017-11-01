@@ -101,7 +101,7 @@
 			</span>
 		</h2>
 	</div>
-	<div class="panel-body">
+	<div v-if="gid != 'rhos-dfg-lt'" class="panel-body">
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-md-2">
@@ -124,6 +124,13 @@
 						<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
 					</div>
 				</div>
+			</div>
+		</div>
+	</div>
+	<div v-else class="panel-body">
+		<div class="container">
+			<div class="row">
+				<h4>Here be dragons!</h4>
 			</div>
 		</div>
 	</div>

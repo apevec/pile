@@ -53,6 +53,11 @@ func GetHeads(w http.ResponseWriter, r *http.Request) {
 
 	groups, _ := ldapxrest.GetGroups(c.LDAP)
 	for group, groupName := range groups {
+		// LT team is special and outlier
+		if group == "rhos-dfg-lt" {
+			continue
+		}
+
 		members, _ := ldapxrest.GetGroupMembersSlice(c.LDAP, group)
 
 		for _, member := range members {
