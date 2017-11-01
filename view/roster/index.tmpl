@@ -61,7 +61,7 @@
 				<th class="no-sort">External</th>
 				<th>Location</th>
 				<th class="no-sort">
-					<a @click="showMap()"><i class="fa fa-map-o"></i> Time</a>
+					<a @click="showMap()" style="cursor: pointer;"><i class="fa fa-map-o"></i> Time</a>
 				</th>
 			</tr>
 		</thead>
@@ -204,6 +204,9 @@
 				this.markers.push(marker);
 				this.map.fitBounds(this.bounds.extend(position));
 			});
+
+			// Add day-night overlay
+			nite.init(this.map);
 		},
 	}
 
@@ -302,5 +305,6 @@
 
 <script async defer src="https://maps.google.com/maps/api/js?key=AIzaSyD6aesunznX9hHrXnqcl2yXqOKhvgOiOkI"></script>
 {{JS "/static/js/jquery.dataTables.min.js"}}
+{{JS "/static/js/nite-overlay.min.js"}}
 {{template "footer" .}}{{end}}
 {{define "foot"}}{{end}}
