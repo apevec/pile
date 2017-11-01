@@ -78,15 +78,17 @@ func GetGroupMembersGeo(ldapc Connection, group string) ([]map[string]string, er
 	if err != nil {
 		return nil, err
 	}
-	var membersgeo = make([]map[string]string, len(uids))
 
+	mapUIDName, _ := GetPeople(ldapc, uids)
+	var membersgeo = make([]map[string]string, len(uids))
 	for i, uid := range uids {
 		tzinfo, _ := GetTimezoneInfo(ldapc, uid)
 
 		membersgeo[i] = map[string]string{
-			"uid": uid,
-			"lat": tzinfo["lat"],
-			"lng": tzinfo["lng"],
+			"uid":  uid,
+			"name": mapUIDName[uid],
+			"lat":  tzinfo["lat"],
+			"lng":  tzinfo["lng"],
 		}
 	}
 

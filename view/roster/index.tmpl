@@ -197,20 +197,21 @@
 			this.tz.forEach((coord) => {
 				// lat and lng just shuffles original values a bit, so we don't have
 				// all the pins pointing to very same place
-				const lat = parseFloat(coord.lat) + (Math.random() / 2500)
-				const lng = parseFloat(coord.lng) + (Math.random() / 2500)
+				const lat = parseFloat(coord.lat) + (Math.random() / 2500);
+				const lng = parseFloat(coord.lng) + (Math.random() / 2500);
 				const position = new google.maps.LatLng(lat, lng);
 				const marker = new google.maps.Marker({
-					position,
-					label: coord.uid,
-					map: this.map
+					position: position,
+					label: coord.uid.substring(0,2).toUpperCase(),
+					title: coord.name,
+					map: this.map,
 				});
 				this.markers.push(marker);
 				this.map.fitBounds(this.bounds.extend(position));
 			});
 
-			// Add day-night overlay
-			nite.init(this.map);
+			const markerCluster = new MarkerClusterer(this.map, this.markers, {imagePath: '/static/img/map/m'});
+			nite.init(this.map); // day-night overlay
 		},
 	}
 
@@ -308,7 +309,8 @@
 </script>
 
 <script async defer src="https://maps.google.com/maps/api/js?key=AIzaSyD6aesunznX9hHrXnqcl2yXqOKhvgOiOkI"></script>
-{{JS "/static/js/jquery.dataTables.min.js"}}
+{{JS "/static/js/markerclusterer.min.js"}}
 {{JS "/static/js/nite-overlay.min.js"}}
+{{JS "/static/js/jquery.dataTables.min.js"}}
 {{template "footer" .}}{{end}}
 {{define "foot"}}{{end}}
