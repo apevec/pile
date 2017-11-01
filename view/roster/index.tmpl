@@ -195,10 +195,14 @@
 			this.map = new google.maps.Map(mapCanvas, mapOptions);
 
 			this.tz.forEach((coord) => {
-				const position = new google.maps.LatLng(coord.lat, coord.lng);
+				// lat and lng just shuffles original values a bit, so we don't have
+				// all the pins pointing to very same place
+				const lat = parseFloat(coord.lat) + (Math.random() / 2500)
+				const lng = parseFloat(coord.lng) + (Math.random() / 2500)
+				const position = new google.maps.LatLng(lat, lng);
 				const marker = new google.maps.Marker({
 					position,
-					//label: coord.uid,
+					label: coord.uid,
 					map: this.map
 				});
 				this.markers.push(marker);
