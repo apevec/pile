@@ -198,6 +198,7 @@
 				const position = new google.maps.LatLng(coord.lat, coord.lng);
 				const marker = new google.maps.Marker({
 					position,
+					//label: coord.uid,
 					map: this.map
 				});
 				this.markers.push(marker);
