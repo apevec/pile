@@ -468,8 +468,10 @@ func getTimeZone(latlng string, location string, remote bool) (string, string, f
 
 	utcOffset := (tz.RawOffset + tz.DstOffset) / 3600
 	utc = strconv.Itoa(utcOffset)
-	if utcOffset >= 0 {
+	if utcOffset > 0 {
 		utc = "+" + utc
+	} else if utcOffset == 0 {
+		utc = ""
 	}
 	timezone = tz.TimeZoneName
 
