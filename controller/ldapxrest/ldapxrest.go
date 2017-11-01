@@ -27,6 +27,7 @@ func Load() {
 	router.Get(uri+"/v2/groups/:group/head", GetGroupHead)
 	router.Get(uri+"/v2/groups/:group/links", GetGroupLinks)
 	router.Get(uri+"/v2/groups/:group/members", GetGroupMembers)
+	router.Get(uri+"/v2/groups/:group/geo", GetGroupMembersGeo)
 }
 
 func GetHeads(w http.ResponseWriter, r *http.Request) {
@@ -103,6 +104,17 @@ func GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	js, _ := json.Marshal(groupInfo)
+	w.Write(js)
+}
+
+func GetGroupMembersGeo(w http.ResponseWriter, r *http.Request) {
+	c := flight.Context(w, r)
+	w.Header().Set("Content-Type", "application/json")
+
+	group := c.Param("group")
+	groupgeo, _ := ldapxrest.GetGroupMembersGeo(c.LDAP, group)
+	js, _ := json.Marshal(groupgeo)
+
 	w.Write(js)
 }
 

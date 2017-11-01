@@ -44,7 +44,8 @@
 
 <template id="group-details-map">
 	<div>
-			<a class="btn btn-link form-control" @click="showTable()">showTable</a>
+		<div id="map" style="height: 400px;	margin: 0 auto;	background: gray;"></div>
+		<button class="btn btn-default btn-link form-control" @click="showTable()">back to table</burron>
 	</div>
 </template>
 
@@ -60,7 +61,7 @@
 				<th class="no-sort">External</th>
 				<th>Location</th>
 				<th class="no-sort">
-					<a @click="showMap()"><i class="fa fa-globe"></i> Time</a>
+					<a @click="showMap()"><i class="fa fa-map-o"></i> Time</a>
 				</th>
 			</tr>
 		</thead>
@@ -139,7 +140,7 @@
 				tz: [],
 				time: '',
 				date: '',
-			};
+			}
 		},
 		computed: {
 			title() {
@@ -151,32 +152,59 @@
 				const d = new Date();
 				const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
 				const nd = new Date(utc + (3600000 * this.tz.utcOffset));
-				const options_time = { hour: 'numeric', minute: 'numeric' };
-				const options_date = { month: 'short', day: 'numeric', year: 'numeric' };
+				const options_time = { hour: 'numeric', minute: 'numeric' }
+				const options_date = { month: 'short', day: 'numeric', year: 'numeric' }
 				this.time = Intl.DateTimeFormat('en-US', options_time).format(nd);
 				this.date = Intl.DateTimeFormat('en-US', options_date).format(nd);
 			},
 		},
 		async mounted() {
 			this.tz = (await this.$http.get('/api/v2/people/' + this.uid + '/tz')).body;
+
 			this.interval = setInterval(this.calcTime, 60000);
 			this.calcTime();
 		},
 		beforeDestroy() {
 			clearInterval(this.interval);
 		},
-	};
+	}
 
 	var GroupDetailsMap = {
 		template: '#group-details-map',
 		delimiters: ['${', '}'],
 		props: ['gid'],
+		data() {
+			return {
+				map: null,
+				bounds: null,
+				markers: [],
+				tz: [],
+			}
+		},
 		methods: {
 			showTable() {
 				this.$emit('show-details', this.gid, 'group-details-table');
 			},
 		},
-	};
+		async mounted() {
+			this.tz = (await this.$http.get('/api/v2/groups/' + this.gid + '/geo')).body;
+
+			this.bounds = new google.maps.LatLngBounds();
+	        const mapCanvas = document.getElementById('map');
+			const mapOptions = {}
+			this.map = new google.maps.Map(mapCanvas, mapOptions);
+
+			this.tz.forEach((coord) => {
+				const position = new google.maps.LatLng(coord.lat, coord.lng);
+				const marker = new google.maps.Marker({
+					position,
+					map: this.map
+				});
+				this.markers.push(marker);
+				this.map.fitBounds(this.bounds.extend(position));
+			});
+		},
+	}
 
 	var GroupDetailsTable = {
 		template: '#group-details-table',
@@ -185,13 +213,13 @@
 		data() {
 			return {
 				members: [],
-			};
+			}
 		},
 		computed: {
 			squads() {
 				for (uid in this.members) {
 					if (this.members[uid].Squad != '') return true;
-				};
+				}
 				return false;
 			},
 		},
@@ -218,7 +246,7 @@
 		components: {
 			'clock': GroupDetailsClock,
 		},
-	};
+	}
 
 	var GroupInfo = {
 		template: '#group-info',
@@ -231,12 +259,12 @@
 					Links: {},
 					Head: {},
 				},
-			};
+			}
 		},
 		async mounted() {
 			this.groupinfo = (await this.$http.get('/api/v2/groups/' + this.gid + '/info')).body;
 		},
-	};
+	}
 
 	let roster = new Vue({
 		el: '#roster',
@@ -251,7 +279,7 @@
 			if (this.active != '') {
 				urlAPI += '/'+this.active;
 				this.details = 'group-details-table';
-			};
+			}
 
 			this.groups = (await this.$http.get(urlAPI)).body;
 		},
@@ -271,6 +299,7 @@
 	});
 </script>
 
+<script async defer src="https://maps.google.com/maps/api/js?key=AIzaSyD6aesunznX9hHrXnqcl2yXqOKhvgOiOkI"></script>
 {{JS "/static/js/jquery.dataTables.min.js"}}
 {{template "footer" .}}{{end}}
 {{define "foot"}}{{end}}

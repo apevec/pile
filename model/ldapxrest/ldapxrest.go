@@ -66,9 +66,31 @@ func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
 	tzinfo["utcOffset"] = utc
 	tzinfo["tzName"] = timezone
 	tzinfo["remote"] = strconv.FormatBool(remote)
-	tzinfo["latlng"] = strconv.FormatFloat(lat, 'f', -1, 64) + "," + strconv.FormatFloat(lng, 'f', -1, 64)
+	tzinfo["lat"] = strconv.FormatFloat(lat, 'f', -1, 64)
+	tzinfo["lng"] = strconv.FormatFloat(lng, 'f', -1, 64)
 
 	return tzinfo, err
+}
+
+func GetGroupMembersGeo(ldapc Connection, group string) ([]map[string]string, error) {
+
+	uids, err := GetGroupMembersSlice(ldapc, group)
+	if err != nil {
+		return nil, err
+	}
+	var membersgeo = make([]map[string]string, len(uids))
+
+	for i, uid := range uids {
+		tzinfo, _ := GetTimezoneInfo(ldapc, uid)
+
+		membersgeo[i] = map[string]string{
+			"uid": uid,
+			"lat": tzinfo["lat"],
+			"lng": tzinfo["lng"],
+		}
+	}
+
+	return membersgeo, err
 }
 
 func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error) {
