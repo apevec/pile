@@ -44,7 +44,9 @@
 
 <template id="group-details-map">
 	<div>
-		<div id="map" style="height: 400px;	margin: 0 auto;	background: gray;"></div>
+		<div id="map" style="height: 400px; margin: 0 auto; background: lightgray;">
+			<h1 v-if="loading" class="text-center"><i class="fa fa-spinner fa-spin"></i></h1>
+		</div>
 		<button class="btn btn-default btn-link form-control" @click="showTable()">back to table</burron>
 	</div>
 </template>
@@ -186,6 +188,7 @@
 				bounds: null,
 				markers: [],
 				tz: [],
+				loading: true,
 			}
 		},
 		methods: {
@@ -219,6 +222,7 @@
 
 			const markerCluster = new MarkerClusterer(this.map, this.markers, {imagePath: '/static/img/map/m'});
 			nite.init(this.map); // day-night overlay
+			this.loading = false;
 		},
 	}
 
