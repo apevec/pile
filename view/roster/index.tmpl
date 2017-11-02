@@ -201,7 +201,9 @@
 
 			this.bounds = new google.maps.LatLngBounds();
 	        const mapCanvas = document.getElementById('map');
-			const mapOptions = {}
+			const mapOptions = {
+				streetViewControl: false,
+			}
 			this.map = new google.maps.Map(mapCanvas, mapOptions);
 
 			this.tz.forEach((coord) => {
@@ -222,7 +224,11 @@
 
 			const markerCluster = new MarkerClusterer(this.map, this.markers, {imagePath: '/static/img/map/m'});
 			nite.init(this.map); // day-night overlay
+			this.interval = setInterval(nite.refresh(), 10000);
 			this.loading = false;
+		},
+		beforeDestroy() {
+			clearInterval(this.interval);
 		},
 	}
 
