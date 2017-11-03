@@ -45,7 +45,7 @@ func GetHeads(w http.ResponseWriter, r *http.Request) {
 			info["uid"] = head
 			info["name"] = name
 			info["role"] = roles[role].Name
-			info["group"] = "tbd"
+			info["group"] = "tbd" // "tbd" is the hardcode to catch it later
 
 			heads[head] = info
 		}
