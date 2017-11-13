@@ -16,5 +16,9 @@ env.json
 *.exe~
 blueprint
 
-# JetBrains IDE metadata
+# IDE metadata
 .idea
+.vscode/*
+
+# Binary
+pile
