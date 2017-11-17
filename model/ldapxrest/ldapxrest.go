@@ -181,6 +181,9 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 func GetGroupLinks(ldapc Connection, group string) (map[string]string, error) {
 	var links = make(map[string]string)
 
+	// "links" is overloaded here by one special link that called "attr",
+	// we should make sure we process it properly on frontend!
+	// e.g. pile:attr=contact - tells us that dfg is not real, rather contact card
 	ldapLinks, err := ldapc.GetGroupLinks(group)
 	if err != nil {
 		return links, err

@@ -93,7 +93,7 @@
 </template>
 
 <template id="group-info">
-<div class="panel-default">
+<div :class="{'panel-default': !contact, 'panel-info': contact}">
 	<div :id="gid" class="panel-heading">
 		<h2 class="panel-title">
 			<span>${group}</span>
@@ -104,11 +104,11 @@
 			</span>
 		</h2>
 	</div>
-	<div v-if="gid != 'rhos-dfg-lt'" class="panel-body">
+	<div v-if="!contact" class="panel-body">
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-md-2">
-					<div v-for="(link, name) in groupinfo.Links">
+					<div v-for="(link, name) in groupinfo.Links" v-if="name != 'Attr'">
 						<i v-if="name == 'Backlog'" class="fa fa-tasks"></i>
 						<i v-else-if="name == 'Mission'" class="fa fa-bullseye"></i>
 						<i v-else class="fa fa-link"></i>
@@ -127,13 +127,6 @@
 						<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
 					</div>
 				</div>
-			</div>
-		</div>
-	</div>
-	<div v-else class="panel-body">
-		<div class="container">
-			<div class="row">
-				<h4>Here be dragons!</h4>
 			</div>
 		</div>
 	</div>
@@ -287,6 +280,14 @@
 					Head: {},
 				},
 			}
+		},
+		computed: {
+			contact() {
+				if (this.groupinfo.Links["Attr"] == "contact") {
+					return true;
+				}
+				return false;
+			},
 		},
 		async mounted() {
 			this.groupinfo = (await this.$http.get('/api/v2/groups/' + this.gid + '/info')).body;
