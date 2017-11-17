@@ -1,5 +1,5 @@
 // Package gitwiki - tbd
-package gitwiki
+package gitpages
 
 func GetPage() string {
 
