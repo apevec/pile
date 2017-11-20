@@ -2,6 +2,7 @@
 package gitpages
 
 import (
+	"bytes"
 	"io/ioutil"
 	"log"
 	"os"
@@ -53,7 +54,10 @@ func GetPageRaw() ([]byte, time.Time) {
 
 func Update(page string, change string) error {
 
-	err := ioutil.WriteFile(gitdir+gitpage, []byte(page), 0644)
+	// dos2unix(page): convert /r/n to /n, markdown needs it to generate <p> properly
+	page_unix := bytes.Replace([]byte(page), []byte("\r\n"), []byte("\n"), -1)
+
+	err := ioutil.WriteFile(gitdir+gitpage, []byte(page_unix), 0644)
 	if err != nil {
 		log.Println(err)
 	}
