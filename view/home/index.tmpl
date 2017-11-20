@@ -1,12 +1,13 @@
-{{define "title"}}RHOS: Roster{{end}}
+{{define "title"}}Roster{{end}}
 {{define "head"}}{{end}}
 {{define "content"}}
 <div class="container">
 	<div class="row">
-		<div class="col-md-12">
+		<div class="col-md-12 markdown">
 			{{NOESCAPE .page}}
 		</div>
 	</div>
+	<div class="row">&nbsp;</div>
 	<div class="row">
 		<div class="col-md-2">
 			<p>
@@ -20,6 +21,19 @@
 		</div>
 	</div>
 </div>
+
+{{JS "/static/js/jquery.min.js"}}
+{{JS "/static/js/jquery.dataTables.min.js"}}
+<script>
+	$('table').DataTable({
+		searching: false,
+		paging: false,
+		info: false,
+		'sDom': 't',
+	});
+	$("table").addClass('table table-bordered table-striped table-hover');
+</script>
+
 {{template "footer" .}}
 {{end}}
 {{define "foot"}}{{end}}

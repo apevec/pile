@@ -10,9 +10,9 @@
             <div class="form-group">
                 <form method="post" action="{{$.CurrentURI}}?_method=patch" class="form-horizontal">
                     <div class="form-group">
-                        <label class="col-md-1 control-label" classfor="change">Change</label>
+                        <label class="col-md-1 control-label" classfor="change">Change *</label>
                         <div class="col-md-11">
-                            <input type="text" class="form-control" {{TEXT "change" .change .}} id="change" placeholder="What is this change about?" /></input>
+                            <input type="text" class="form-control" {{TEXT "change" .change .}} id="change" placeholder="(required) What is this change about?" /></input>
                         </div>
                     </div>
                     <div class="form-group">
