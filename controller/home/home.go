@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/arapov/pile/lib/flight"
+	"github.com/arapov/pile/model/gitpages"
 
 	"github.com/blue-jay/core/router"
 )
@@ -29,8 +30,10 @@ func Load() {
 func Index(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 
-	//output := gitpages.GetPage()
+	page, modified := gitpages.GetPage()
 
 	v := c.View.New("home/index")
+	v.Vars["page"] = page
+	v.Vars["modified"] = modified
 	v.Render(w, r)
 }

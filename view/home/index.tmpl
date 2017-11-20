@@ -1,16 +1,21 @@
 {{define "title"}}RHOS: Roster{{end}}
 {{define "head"}}{{end}}
 {{define "content"}}
-
-	<h1><a href="/roster">/roster - rhos roster</a></h1>
-	<h1><a href="/roster/head">/roster/head - onepager</a></h1>
-
-	<p>TODO: markdown page</p>
-	<p>
-	Please route all the feedback to: <a href="https://rover.redhat.com/people/profile/aarapov/">Anton Arapov</a>,
-	<a href="mailto:aarapov@redhat.com"><i class="fa fa-envelope"></i> aarapov@redhat.com</a>
-	</p>
-
+<div class="container">
+	<div class="row">
+		<div class="col-md-11">
+			{{NOESCAPE .page}}
+		</div>
+		<div class="col-md-1">
+			<p>Edit</p>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12">
+			<p>Last modified: {{.modified}}</p>
+		</div>
+	</div>
+</div>
 	{{template "footer" .}}
 {{end}}
 {{define "foot"}}{{end}}
