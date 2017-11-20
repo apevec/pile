@@ -1,7 +1,39 @@
 {{define "title"}}RHOS: Roster - Edit front page{{end}}
 {{define "head"}}{{end}}
 {{define "content"}}
+<div class="page-header">
+    <h1><label class="col-md-12" classfor="page">Edit Page. <a href="https://guides.github.com/pdfs/markdown-cheatsheet-online.pdf">Syntax</a></label></h1>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <form method="post" action="{{$.CurrentURI}}?_method=patch" class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-md-1 control-label" classfor="change">Change</label>
+                        <div class="col-md-11">
+                            <input type="text" class="form-control" {{TEXT "change" .change .}} id="change" placeholder="What is this change about?" /></input>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <textarea rows="25" class="form-control" id="page" name="page" placeholder="Type your text here..." />{{TEXTAREA "page" .page .}}</textarea>
+                        </div>
+                    </div>
 
+                    <button class="btn btn-success" type="submit">
+                        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Save
+                    </button>
+                    <a title="Back" class="btn btn-default" role="button" href="{{$.GrandparentURI}}">
+                        <span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span> Back
+                    </a>
+
+                    <input type="hidden" name="_token" value="{{$.token}}">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {{template "footer" .}}
 {{end}}
 {{define "foot"}}{{end}}

@@ -17,6 +17,7 @@ var (
 // Load the routes.
 func Load() {
 	router.Get(uri, Index)
+	router.Patch(uri+"edit", Update)
 	router.Get(uri+"edit", Edit)
 }
 
@@ -35,6 +36,36 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func Edit(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 
+	page, _ := gitpages.GetPageRaw()
+
 	v := c.View.New("home/edit")
+	c.Repopulate(v.Vars, "change")
+	c.Repopulate(v.Vars, "page")
+	if v.Vars["page"] == nil {
+		v.Vars["page"] = string(page)
+	}
 	v.Render(w, r)
+}
+
+func Update(w http.ResponseWriter, r *http.Request) {
+	c := flight.Context(w, r)
+
+	if !c.FormValid("page") {
+		Edit(w, r)
+		return
+	}
+	if !c.FormValid("change") {
+		Edit(w, r)
+		return
+	}
+
+	err := gitpages.Update(r.FormValue("page"), r.FormValue("change"))
+	if err != nil {
+		c.FlashErrorGeneric(err)
+		Edit(w, r)
+		return
+	}
+
+	c.FlashSuccess("Page updated.")
+	c.Redirect(uri)
 }
