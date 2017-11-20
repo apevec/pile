@@ -10,13 +10,6 @@ import (
 	"github.com/blue-jay/core/router"
 )
 
-// TODO:
-// - get the git specifics to the /lib
-
-const (
-	directory = "pages"
-)
-
 var (
 	uri = "/"
 )
@@ -24,6 +17,7 @@ var (
 // Load the routes.
 func Load() {
 	router.Get(uri, Index)
+	router.Get(uri+"edit", Edit)
 }
 
 // Index displays the home page.
@@ -35,5 +29,12 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	v := c.View.New("home/index")
 	v.Vars["page"] = page
 	v.Vars["modified"] = modified
+	v.Render(w, r)
+}
+
+func Edit(w http.ResponseWriter, r *http.Request) {
+	c := flight.Context(w, r)
+
+	v := c.View.New("home/edit")
 	v.Render(w, r)
 }
