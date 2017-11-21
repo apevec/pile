@@ -408,7 +408,10 @@ func removeMe(xs *[]string) {
 func decodeNote(note string) map[string]string {
 	result := make(map[string]string)
 
-	re, _ := regexp.Compile(`pile:(\w*=[a-zA-z0-9:/.@-]+)`)
+	// accepts:
+	// pile:key=value or pile:key="value value"
+	// can be separated by , or space
+	re, _ := regexp.Compile(`pile:(\w*=[\w:/@.-]+|\w*="[\w\s!,:/@.-]+")`)
 	// TODO: take care of error here
 	pile := re.FindAllStringSubmatch(note, -1)
 	// TODO: code below is fragile, very fragile
