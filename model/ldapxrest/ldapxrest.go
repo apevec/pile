@@ -2,6 +2,7 @@ package ldapxrest
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"regexp"
@@ -48,7 +49,9 @@ func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
 	if err != nil {
 		return tzinfo, err
 	}
-
+	if len(ldapLocationData) != 1 {
+		return tzinfo, errors.New(uid + " is the member, though was not found in ldap.")
+	}
 	ldapLocation := ldapLocationData[0] // safe: we have alays one item here
 
 	remote := false
@@ -78,11 +81,19 @@ func GetGroupMembersGeo(ldapc Connection, group string) ([]map[string]string, er
 	if err != nil {
 		return nil, err
 	}
-
-	mapUIDName, _ := GetPeople(ldapc, uids)
 	var membersgeo = make([]map[string]string, len(uids))
+
+	mapUIDName, err := GetPeople(ldapc, uids)
+	if err != nil {
+		log.Println(err)
+		return membersgeo, err
+	}
+
 	for i, uid := range uids {
-		tzinfo, _ := GetTimezoneInfo(ldapc, uid)
+		tzinfo, err := GetTimezoneInfo(ldapc, uid)
+		if err != nil {
+			log.Println(err)
+		}
 
 		membersgeo[i] = map[string]string{
 			"uid":  uid,
