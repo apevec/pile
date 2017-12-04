@@ -72,7 +72,7 @@
 				<td>
 					<a :href="'https://rover.redhat.com/people/profile/' + uid + '/'">${member.Name}</a>
 				</td>
-				<td>${member.Role} <span v-if="member.CC == '667'">(QE)</span></td>
+				<td>${member.Role}</td>
 				<td v-if="squads">${member.Squad}</td>
 				<td><span v-for="(data, name) in member.Data" v-if="name == 'Comp'">${data} </span></td>
 				<td>${member.IRC}</td>

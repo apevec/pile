@@ -152,7 +152,17 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 			remote = true
 		}
 
+		// Logic for setting a proper role for a group member
+		// 1. Default role is "Engineer"
 		role := "Engineer"
+		// 2. Guess the role based on CC
+		switch cc {
+		case "667":
+			role = role + " (QE)"
+		case "105":
+			role = "Support Delivery"
+		}
+		// 3. Look for the role in special Role groups
 		if _, ok := mapPeopleRole[uid]; ok {
 			role = mapPeopleRole[uid]
 		}
