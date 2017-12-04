@@ -126,11 +126,6 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 		}
 	}
 
-	ldapPeople, err := ldapc.GetPeopleFull(uids)
-	if err != nil {
-		return members, err
-	}
-
 	var mapPeopleSquad = make(map[string]string)
 	squads, err := GetSquads(ldapc, group)
 	if err != nil {
@@ -148,6 +143,11 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 
 			mapPeopleSquad[squadMember] = squadName
 		}
+	}
+
+	ldapPeople, err := ldapc.GetPeopleFull(uids)
+	if err != nil {
+		return members, err
 	}
 
 	for _, man := range ldapPeople {
