@@ -44,12 +44,13 @@ var (
 		"rhatBio",            // notes/bio
 		"rhatNickName",       // irc nick
 		"rhatCostCenter",     // cost center
+		"rhatLocation",       // location
 		"rhatOfficeLocation", // describes REMOTE
 	}
 	ldapAttrMemberLocation = []string{
 		"uid",                // uid
-		"rhatLocation",       // location
 		"registeredAddress",  // lat/lng
+		"rhatLocation",       // location
 		"rhatOfficeLocation", // describes REMOTE
 	}
 

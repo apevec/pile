@@ -55,7 +55,10 @@ func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
 	ldapLocation := ldapLocationData[0] // safe: we have alays one item here
 
 	remote := false
-	if ldapLocation.GetAttributeValue("rhatOfficeLocation") == "REMOTE" {
+	if strings.ToLower(ldapLocation.GetAttributeValue("rhatOfficeLocation")) == "remote" {
+		remote = true
+	}
+	if strings.Contains(strings.ToLower(ldapLocation.GetAttributeValue("rhatLocation")), "remote") {
 		remote = true
 	}
 
@@ -159,7 +162,10 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 		cc := man.GetAttributeValue("rhatCostCenter")
 
 		remote := false
-		if man.GetAttributeValue("rhatOfficeLocation") == "REMOTE" {
+		if strings.ToLower(man.GetAttributeValue("rhatOfficeLocation")) == "remote" {
+			remote = true
+		}
+		if strings.Contains(strings.ToLower(man.GetAttributeValue("rhatLocation")), "remote") {
 			remote = true
 		}
 
