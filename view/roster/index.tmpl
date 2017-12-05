@@ -82,8 +82,7 @@
 						<!-- span v-if="name == 'Link'"><i class="fa fa-link" title="Link"> ${link} </i></span -->
 					</span>
 				</td>
-				<td v-if="member.Remote == false">${member.Country}</td>
-				<td v-else>Remote ${member.Country}</td>
+				<td>${member.Country}</td>
 				<td>
 					<clock :uid="uid"></clock>
 				</td>

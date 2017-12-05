@@ -54,14 +54,7 @@ func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
 	}
 	ldapLocation := ldapLocationData[0] // safe: we have alays one item here
 
-	remote := false
-	if strings.ToLower(ldapLocation.GetAttributeValue("rhatOfficeLocation")) == "remote" {
-		remote = true
-	}
-	if strings.Contains(strings.ToLower(ldapLocation.GetAttributeValue("rhatLocation")), "remote") {
-		remote = true
-	}
-
+	remote := isRemote(ldapLocation)
 	latlng := ldapLocation.GetAttributeValue("registeredAddress")
 	location := ldapLocation.GetAttributeValue("rhatLocation")
 	utc, timezone, lat, lng, err := getTimeZone(latlng, location, remote)
@@ -79,7 +72,6 @@ func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
 }
 
 func GetGroupMembersGeo(ldapc Connection, group string) ([]map[string]string, error) {
-
 	uids, err := GetGroupMembersSlice(ldapc, group)
 	if err != nil {
 		return nil, err
@@ -158,16 +150,10 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 		name := man.GetAttributeValue("cn")
 		ircnick := man.GetAttributeValue("rhatNickName")
 		data := decodeNote(man.GetAttributeValue("rhatBio"))
-		co := man.GetAttributeValue("co")
 		cc := man.GetAttributeValue("rhatCostCenter")
 
-		remote := false
-		if strings.ToLower(man.GetAttributeValue("rhatOfficeLocation")) == "remote" {
-			remote = true
-		}
-		if strings.Contains(strings.ToLower(man.GetAttributeValue("rhatLocation")), "remote") {
-			remote = true
-		}
+		remote := isRemote(man)
+		co := getHumanReadableLocation(man)
 
 		// Logic for setting a proper role for a group member
 		// 1. Default role is "Engineer"
@@ -430,6 +416,37 @@ func removeMe(xs *[]string) {
 			break
 		}
 	}
+}
+
+func getHumanReadableLocation(ldapEntry *ldap.Entry) string {
+	co := ldapEntry.GetAttributeValue("rhatLocation")
+	re, _ := regexp.Compile(`RH - ([a-zA-Z\s]+).*`)
+	place := re.FindStringSubmatch(co)
+	if len(place) == 2 {
+		co = ""
+		if isRemote(ldapEntry) {
+			co += "Remote "
+		}
+		co += strings.Trim(place[1], " ")              // City
+		co += ", " + ldapEntry.GetAttributeValue("co") // Country
+	} else {
+		tmp := strings.Replace(co, "US", "USA,", 1)
+		co = tmp
+	}
+
+	return co
+}
+
+func isRemote(ldapLocation *ldap.Entry) bool {
+	remote := false
+	if strings.ToLower(ldapLocation.GetAttributeValue("rhatOfficeLocation")) == "remote" {
+		remote = true
+	}
+	if strings.Contains(strings.ToLower(ldapLocation.GetAttributeValue("rhatLocation")), "remote") {
+		remote = true
+	}
+
+	return remote
 }
 
 func decodeNote(note string) map[string]string {
