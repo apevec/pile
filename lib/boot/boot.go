@@ -31,7 +31,10 @@ func RegisterServices(config *env.Info) {
 	mysqlDB, _ := config.MySQL.Connect(true)
 
 	// Connect to LDAP
-	ldapClient, _ := config.LDAP.Dial()
+	ldapClient, err := config.LDAP.Dial()
+	if err != nil {
+		log.Panic(err)
+	}
 
 	// Load the controller routes
 	controller.LoadRoutes()
