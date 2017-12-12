@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/arapov/pile/controller/status"
 	"github.com/arapov/pile/lib/flight"
 	"github.com/arapov/pile/model/ldapxrest"
 	"github.com/blue-jay/core/router"
@@ -196,6 +197,7 @@ func Ping(w http.ResponseWriter, r *http.Request) {
 	pong, err := ldapxrest.Ping(c.LDAP)
 	if err != nil {
 		log.Println(err)
+		status.Error500(w, r)
 	}
 	js, _ := json.Marshal(pong)
 
