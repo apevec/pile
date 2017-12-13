@@ -105,10 +105,10 @@ func (c *Conn) query(basedn string, ldapAttributes []string, filter string) ([]*
 func (c *Conn) getGroups(ldapAttributes []string, groups ...string) ([]*ldap.Entry, error) {
 	var filter string
 
-	// "(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))"
-	filter = "(&(objectClass=rhatGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))"
+	// "(&(objectClass=rhatRoverGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))"
+	filter = "(&(objectClass=rhatRoverGroup)(&(cn=rhos-dfg-*)(!(cn=*squad*))))"
 	if len(groups) > 0 && groups[0] != "" {
-		filter = "(&(objectClass=rhatGroup)(&"
+		filter = "(&(objectClass=rhatRoverGroup)(&"
 		for _, group := range groups {
 			filter += fmt.Sprintf("(cn=%s)", group)
 		}
@@ -139,10 +139,10 @@ func (c *Conn) GetGroupLinks(group string) (*ldap.Entry, error) {
 func (c *Conn) getSquads(ldapAttributes []string, group string, squads ...string) ([]*ldap.Entry, error) {
 	var filter string
 
-	// "(&(objectClass=rhatGroup)(cn=rhos-dfg-%group%-squad-*))"
-	filter = fmt.Sprintf("(&(objectClass=rhatGroup)(cn=%s-squad-*))", group)
+	// "(&(objectClass=rhatRoverGroup)(cn=rhos-dfg-%group%-squad-*))"
+	filter = fmt.Sprintf("(&(objectClass=rhatRoverGroup)(cn=%s-squad-*))", group)
 	if len(squads) > 0 {
-		filter = "(&(objectClass=rhatGroup)(&"
+		filter = "(&(objectClass=rhatRoverGroup)(&"
 		for _, squad := range squads {
 			filter += fmt.Sprintf("(cn=%s)", squad)
 		}
