@@ -76,7 +76,7 @@ func GetHeads(w http.ResponseWriter, r *http.Request) {
 					newinfo[k] = v
 					newinfo["group"] = groupName
 				}
-				heads[member+group[9:12]] = newinfo
+				heads[member+group[9:11]] = newinfo
 				continue
 			}
 
