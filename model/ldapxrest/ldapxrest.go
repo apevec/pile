@@ -279,7 +279,9 @@ func GetRoles(ldapc Connection) (map[string]*role, error) {
 	for _, ldapRole := range ldapRoles {
 		roleID := ldapRole.GetAttributeValue("cn")
 		roleName := ldapRole.GetAttributeValue("description")
-		roleMembers := ldapRole.GetAttributeValues("memberUid")
+
+		roleMembers := cleanUids(ldapRole.GetAttributeValues("uniqueMember"))
+		//roleMembers = append(roleMembers, cleanUids(ldapRole.GetAttributeValues("owner"))...)
 
 		// TODO: find a better way for exclusions
 		if roleID != "rhos-steward" {
@@ -301,7 +303,8 @@ func GetGroupMembersSlice(ldapc Connection, group string) ([]string, error) {
 	if err != nil {
 		return members, err
 	}
-	groupMembers := ldapGroupMembers.GetAttributeValues("memberUid")
+	groupMembers := cleanUids(ldapGroupMembers.GetAttributeValues("uniqueMember"))
+	groupMembers = append(groupMembers, cleanUids(ldapGroupMembers.GetAttributeValues("owner"))...)
 
 	squads, err := GetSquads(ldapc, group)
 	if err != nil {
@@ -311,7 +314,8 @@ func GetGroupMembersSlice(ldapc Connection, group string) ([]string, error) {
 		ldapSquadMembers, _ := ldapc.GetSquadMembers(group, squad)
 		// TODO: handle error gracefully
 
-		squadMembers := ldapSquadMembers.GetAttributeValues("memberUid")
+		squadMembers := cleanUids(ldapSquadMembers.GetAttributeValues("uniqueMember"))
+		squadMembers = append(squadMembers, cleanUids(ldapSquadMembers.GetAttributeValues("owner"))...)
 		groupMembers = append(groupMembers, squadMembers...)
 	}
 
@@ -447,6 +451,17 @@ func isRemote(ldapLocation *ldap.Entry) bool {
 	}
 
 	return remote
+}
+
+func cleanUids(uids []string) []string {
+	re, _ := regexp.Compile(`uid=([a-z]+)`)
+	var cleanUids []string
+
+	for _, uid := range uids {
+		cleanUids = append(cleanUids, re.FindStringSubmatch(uid)[1])
+	}
+
+	return cleanUids
 }
 
 func decodeNote(note string) map[string]string {

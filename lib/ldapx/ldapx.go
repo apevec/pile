@@ -18,20 +18,23 @@ var (
 		"description", // description
 	}
 	ldapAttrGroupMembers = []string{
-		"memberUid", // []members
+		"uniqueMember", // []members
+		"owner",        // []members owners
 	}
 	ldapAttrGroupLinks = []string{
 		"rhatGroupNotes", // notes
 	}
 	ldapAttrGroup = []string{
-		"cn",          // group id
-		"description", // description
-		"memberUid",   // []members
+		"cn",           // group id
+		"description",  // description
+		"uniqueMember", // []members
+		"owner",        // []members owners
 	}
 	ldapAttrRoles = []string{
-		"cn",          // roles id
-		"description", // description
-		"memberUid",   // []members
+		"cn",           // roles id
+		"description",  // description
+		"uniqueMember", // []members
+		"owner",        // []members owners
 	}
 	ldapAttrMemberTiny = []string{
 		"uid", // uid
