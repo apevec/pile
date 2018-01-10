@@ -276,7 +276,7 @@ func GetRoles(ldapc Connection) (map[string]*role, error) {
 		roleName := ldapRole.GetAttributeValue("description")
 
 		roleMembers := cleanUids(ldapRole.GetAttributeValues("uniqueMember"))
-		//roleMembers = append(roleMembers, cleanUids(ldapRole.GetAttributeValues("owner"))...)
+		roleMembers = append(roleMembers, cleanUids(ldapRole.GetAttributeValues("owner"))...)
 
 		// TODO: find a better way for exclusions
 		if roleID != "rhos-steward" {
