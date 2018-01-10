@@ -224,7 +224,6 @@ func GetGroupHead(ldapc Connection, group string) (map[string][]map[string]strin
 			mapPeopleRole[uid] = role.Name
 			mapPeopleName[uid] = name
 		}
-
 	}
 
 	groupMembers, err := GetGroupMembersSlice(ldapc, group)
@@ -306,8 +305,10 @@ func GetGroupMembersSlice(ldapc Connection, group string) ([]string, error) {
 		return members, err
 	}
 	for squad := range squads {
-		ldapSquadMembers, _ := ldapc.GetSquadMembers(group, squad)
-		// TODO: handle error gracefully
+		ldapSquadMembers, err := ldapc.GetSquadMembers(group, squad)
+		if err != nil {
+			return members, err
+		}
 
 		squadMembers := cleanUids(ldapSquadMembers.GetAttributeValues("uniqueMember"))
 		squadMembers = append(squadMembers, cleanUids(ldapSquadMembers.GetAttributeValues("owner"))...)
