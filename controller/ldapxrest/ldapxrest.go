@@ -35,54 +35,7 @@ func GetHeads(w http.ResponseWriter, r *http.Request) {
 	c := flight.Context(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
-	var heads = make(map[string]map[string]string)
-
-	roles, _ := ldapxrest.GetRoles(c.LDAP)
-	for role := range roles {
-		headPeople, _ := ldapxrest.GetPeople(c.LDAP, roles[role].Members)
-
-		for head, name := range headPeople {
-			var info = make(map[string]string)
-			info["uid"] = head
-			info["name"] = name
-			info["role"] = roles[role].Name
-			info["group"] = "tbd" // "tbd" is the hardcode to catch it later
-
-			heads[head] = info
-		}
-	}
-
-	groups, _ := ldapxrest.GetGroups(c.LDAP)
-	for group, groupName := range groups {
-		// LT team is special and outlier
-		if group == "rhos-dfg-lt" {
-			continue
-		}
-
-		members, _ := ldapxrest.GetGroupMembersSlice(c.LDAP, group)
-
-		for _, member := range members {
-			if _, ok := heads[member]; !ok {
-				continue
-			}
-
-			// In case we have one person in more than one group
-			// we clone this person with another key [9:12]
-			// This is useful to have it this way, as we can
-			// spot Head folks who aren't assigned to any group
-			if heads[member]["group"] != "tbd" {
-				var newinfo = make(map[string]string)
-				for k, v := range heads[member] {
-					newinfo[k] = v
-					newinfo["group"] = groupName
-				}
-				heads[member+group[9:11]] = newinfo
-				continue
-			}
-
-			heads[member]["group"] = groupName
-		}
-	}
+	heads, _ := ldapxrest.GetHeads(c.LDAP)
 
 	js, _ := json.Marshal(heads)
 	w.Write(js)

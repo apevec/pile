@@ -42,6 +42,72 @@ type Connection interface {
 	GetGroupsTiny(groups ...string) ([]*ldap.Entry, error)
 }
 
+func GetHeads(ldapc Connection) (map[string]map[string]string, error) {
+	var heads = make(map[string]map[string]string)
+
+	roles, err := GetRoles(ldapc)
+	if err != nil {
+		return heads, err
+	}
+	for role := range roles {
+		headPeople, err := GetPeople(ldapc, roles[role].Members)
+		if err != nil {
+			return heads, err
+		}
+
+		for head, name := range headPeople {
+			var info = make(map[string]string)
+			info["uid"] = head
+			info["name"] = name
+			info["role"] = roles[role].Name
+			info["group"] = "tbd" // "tbd" is the hardcode to catch it later
+
+			heads[head] = info
+		}
+	}
+
+	groups, err := GetGroups(ldapc)
+	if err != nil {
+		return heads, err
+	}
+	for group, groupName := range groups {
+		// LT team is special and outlier
+		if group == "rhos-dfg-lt" {
+			continue
+		}
+
+		members, err := GetGroupMembersSlice(ldapc, group)
+		if err != nil {
+			return heads, err
+		}
+
+		for _, member := range members {
+			if _, ok := heads[member]; !ok {
+				// Filter out everyone, who is not in headPeople
+				continue
+			}
+
+			// In case we have one person in more than one group
+			// we clone this person with another key [9:12]
+			// This is useful to have it this way, as we can
+			// spot Head folks who aren't assigned to any group
+			if heads[member]["group"] != "tbd" {
+				var newinfo = make(map[string]string)
+				for k, v := range heads[member] {
+					newinfo[k] = v
+					newinfo["group"] = groupName
+				}
+				heads[member+group[9:11]] = newinfo
+				continue
+			}
+
+			heads[member]["group"] = groupName
+		}
+	}
+
+	return heads, err
+}
+
 func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
 	var tzInfo = make(map[string]string)
 
