@@ -104,16 +104,10 @@ func GetGroupMembersGeo(ldapc Connection, group string) ([]map[string]string, er
 func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error) {
 	var members = map[string]*member{}
 
-	uids, err := GetGroupMembersSlice(ldapc, group)
-	if err != nil {
-		return members, err
-	}
-
 	roles, err := GetRoles(ldapc)
 	if err != nil {
 		return members, err
 	}
-
 	var mapPeopleRole = make(map[string]string)
 	for _, role := range roles {
 		for _, uid := range role.Members {
@@ -127,19 +121,25 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 		return members, err
 	}
 	for squad, squadName := range squads {
-		squadMembers, _ := GetGroupMembersSlice(ldapc, squad)
-		for _, squadMember := range squadMembers {
+		uids, _ := GetGroupMembersSlice(ldapc, squad)
+		for _, uid := range uids {
 
-			if mapPeopleRole[squadMember] == "Steward" {
+			if mapPeopleRole[uid] == "Steward" {
 				// We don't want Steward to be a member of any squad.
+				// Stewards managing squads, thus members of every squad and
+				// we don't want attach Steward to squad.
 				// So we skip squad assignment here
 				continue
 			}
 
-			mapPeopleSquad[squadMember] = squadName
+			mapPeopleSquad[uid] = squadName
 		}
 	}
 
+	uids, err := GetGroupMembersSlice(ldapc, group)
+	if err != nil {
+		return members, err
+	}
 	ldapPeople, err := ldapc.GetPeopleFull(uids)
 	if err != nil {
 		return members, err
@@ -149,9 +149,9 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 		uid := man.GetAttributeValue("uid")
 		name := man.GetAttributeValue("cn")
 		ircnick := man.GetAttributeValue("rhatNickName")
-		data := decodeNote(man.GetAttributeValue("rhatBio"))
 		cc := man.GetAttributeValue("rhatCostCenter")
 
+		data := decodeNote(man.GetAttributeValue("rhatBio"))
 		remote := isRemote(man)
 		co := getHumanReadableLocation(man)
 
