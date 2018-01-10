@@ -43,32 +43,28 @@ type Connection interface {
 }
 
 func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {
-	var tzinfo = make(map[string]string)
+	var tzInfo = make(map[string]string)
 
 	ldapLocationData, err := ldapc.GetPeopleLocationData(uid)
 	if err != nil {
-		return tzinfo, err
+		return tzInfo, err
 	}
 	if len(ldapLocationData) != 1 {
-		return tzinfo, errors.New(uid + " is the member, though was not found in ldap.")
+		return tzInfo, errors.New(uid + " is the member, though was not found in ldap.")
 	}
 	ldapLocation := ldapLocationData[0] // safe: we have alays one item here
 
 	remote := isRemote(ldapLocation)
 	latlng := ldapLocation.GetAttributeValue("registeredAddress")
 	location := ldapLocation.GetAttributeValue("rhatLocation")
-	utc, timezone, lat, lng, err := getTimeZone(latlng, location, remote)
+	tzInfo, err = getTimeZone(latlng, location, remote)
 	if err != nil {
 		return nil, err
 	}
 
-	tzinfo["utcOffset"] = utc
-	tzinfo["tzName"] = timezone
-	tzinfo["remote"] = strconv.FormatBool(remote)
-	tzinfo["lat"] = strconv.FormatFloat(lat, 'f', -1, 64)
-	tzinfo["lng"] = strconv.FormatFloat(lng, 'f', -1, 64)
+	tzInfo["remote"] = strconv.FormatBool(remote)
 
-	return tzinfo, err
+	return tzInfo, err
 }
 
 func GetGroupMembersGeo(ldapc Connection, group string) ([]map[string]string, error) {
@@ -478,20 +474,18 @@ func decodeNote(note string) map[string]string {
 	return result
 }
 
-func getTimeZone(latlng string, location string, remote bool) (string, string, float64, float64, error) {
-	utc := ""
-	timezone := ""
+func getTimeZone(latlng string, location string, remote bool) (map[string]string, error) {
+	var tzInfo = make(map[string]string)
 
 	// TODO: take this out to configuration
 	gapi := os.Getenv("GAPI")
 	if gapi == "" {
-		log.Println("GAPI environment variable is not set. Can't find timezone!")
-		// return utc, timezone
+		return tzInfo, errors.New("GAPI environment variable is not set. Can't find timezone!")
 	}
 	mapsc, err := maps.NewClient(maps.WithAPIKey(gapi))
 	if err != nil {
 		log.Println(err)
-		return utc, timezone, 0, 0, err
+		return tzInfo, err
 	}
 
 	var lat float64
@@ -511,7 +505,7 @@ func getTimeZone(latlng string, location string, remote bool) (string, string, f
 		loc, err := mapsc.Geocode(context.Background(), r)
 		if err != nil {
 			log.Println(err)
-			return utc, timezone, 0, 0, err
+			return tzInfo, err
 		}
 
 		lat = loc[0].Geometry.Location.Lat
@@ -531,17 +525,24 @@ func getTimeZone(latlng string, location string, remote bool) (string, string, f
 	tz, err := mapsc.Timezone(context.Background(), r)
 	if err != nil {
 		log.Println(err)
-		return utc, timezone, 0, 0, err
+		return tzInfo, err
 	}
 
 	utcOffset := (tz.RawOffset + tz.DstOffset) / 3600
-	utc = strconv.Itoa(utcOffset)
+	utc := strconv.Itoa(utcOffset)
 	if utcOffset > 0 {
 		utc = "+" + utc
 	} else if utcOffset == 0 {
 		utc = ""
 	}
-	timezone = tz.TimeZoneName
+	timezone := tz.TimeZoneName
 
-	return utc, timezone, lat, lng, err
+	tzInfo = map[string]string{
+		"utcOffset": utc,
+		"tzName":    timezone,
+		"lat":       strconv.FormatFloat(lat, 'f', -1, 64),
+		"lng":       strconv.FormatFloat(lng, 'f', -1, 64),
+	}
+
+	return tzInfo, err
 }
