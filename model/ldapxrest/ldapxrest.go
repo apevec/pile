@@ -42,70 +42,75 @@ type Connection interface {
 	GetGroupsTiny(groups ...string) ([]*ldap.Entry, error)
 }
 
-func GetHeads(ldapc Connection) (map[string]map[string]string, error) {
-	var heads = make(map[string]map[string]string)
+func GetAll(ldapc Connection, head bool) (map[string]map[string]string, error) {
+	var all = make(map[string]map[string]string)
 
 	roles, err := GetRoles(ldapc)
 	if err != nil {
-		return heads, err
+		return all, err
 	}
-	for role := range roles {
-		headPeople, err := GetPeople(ldapc, roles[role].Members)
-		if err != nil {
-			return heads, err
-		}
 
-		for head, name := range headPeople {
-			var info = make(map[string]string)
-			info["uid"] = head
-			info["name"] = name
-			info["role"] = roles[role].Name
-			info["group"] = "tbd" // "tbd" is the hardcode to catch it later
-
-			heads[head] = info
+	var mapPeopleRole = make(map[string]string)
+	for _, role := range roles {
+		for _, uid := range role.Members {
+			mapPeopleRole[uid] = role.Name
 		}
 	}
 
 	groups, err := GetGroups(ldapc)
 	if err != nil {
-		return heads, err
+		return all, err
 	}
+
 	for group, groupName := range groups {
-		// LT team is special and outlier
-		if group == "rhos-dfg-lt" {
-			continue
-		}
 
-		members, err := GetGroupMembersSlice(ldapc, group)
+		uids, err := GetGroupMembersSlice(ldapc, group)
 		if err != nil {
-			return heads, err
+			return all, err
 		}
 
-		for _, member := range members {
-			if _, ok := heads[member]; !ok {
-				// Filter out everyone, who is not in headPeople
-				continue
+		mapUIDName, err := GetPeople(ldapc, uids)
+		if err != nil {
+			return all, err
+		}
+
+		for _, uid := range uids {
+			if _, ok := all[uid]; !ok {
+				var info = make(map[string]string)
+				info["uid"] = uid
+				info["name"] = mapUIDName[uid]
+				info["role"] = mapPeopleRole[uid]
+				info["group"] = "tbd" // "tbd" is the hardcode to catch it later
+				all[uid] = info
 			}
 
 			// In case we have one person in more than one group
 			// we clone this person with another key [9:12]
 			// This is useful to have it this way, as we can
-			// spot Head folks who aren't assigned to any group
-			if heads[member]["group"] != "tbd" {
+			// spot folks who aren't assigned to any group
+			// or assigned to multiple
+			if all[uid]["group"] != "tbd" {
 				var newinfo = make(map[string]string)
-				for k, v := range heads[member] {
+				for k, v := range all[uid] {
 					newinfo[k] = v
-					newinfo["group"] = groupName
+					newinfo["group"] = group
+					newinfo["groupName"] = groupName
 				}
-				heads[member+group[9:11]] = newinfo
+				all[uid+group[9:11]] = newinfo
+
 				continue
 			}
 
-			heads[member]["group"] = groupName
+			all[uid]["group"] = group
+			all[uid]["groupName"] = groupName
 		}
 	}
 
-	return heads, err
+	return all, err
+}
+
+func GetHeads(ldapc Connection) (map[string]map[string]string, error) {
+	return GetAll(ldapc, true)
 }
 
 func GetTimezoneInfo(ldapc Connection, uid string) (map[string]string, error) {

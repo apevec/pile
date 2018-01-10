@@ -22,7 +22,7 @@
 			<tbody>
 				<tr v-if="loading"><td colspan="4" bgcolor="orange"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
 				<tr v-for="head in heads">
-					<td>${head.group}</td>
+					<td><a :href="'/roster/' + head.group">${head.groupName}</a></td>
 					<td>${head.role}</td>
 					<td><a :href="'https://rover.redhat.com/people/profile/' + head.uid + '/'">${head.name}</a></td>
 					<td>${head.uid}@redhat.com</td>
