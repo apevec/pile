@@ -20,6 +20,7 @@ func Load() {
 
 	router.Get(uri+"/v2/people/:uid/tz", GetTimezoneInfo)
 	router.Get(uri+"/v2/groups/heads", GetHeads)
+	router.Get(uri+"/v2/groups/all", GetAll)
 
 	router.Get(uri+"/v2/groups", GetGroups)
 	router.Get(uri+"/v2/groups/:group", GetGroups)
@@ -38,6 +39,16 @@ func GetHeads(w http.ResponseWriter, r *http.Request) {
 	heads, _ := ldapxrest.GetHeads(c.LDAP)
 
 	js, _ := json.Marshal(heads)
+	w.Write(js)
+}
+
+func GetAll(w http.ResponseWriter, r *http.Request) {
+	c := flight.Context(w, r)
+	w.Header().Set("Content-Type", "application/json")
+
+	all, _ := ldapxrest.GetAll(c.LDAP, false)
+
+	js, _ := json.Marshal(all)
 	w.Write(js)
 }
 

@@ -1,4 +1,4 @@
-{{define "title"}}TC-UA-Steward Roster{{end}}
+{{define "title"}}Roster: {{.name}}{{end}}
 {{define "head"}}
 	{{JS "/static/js/vue.min.js"}}
 	{{JS "/static/js/vue-resource.min.js"}}
@@ -7,7 +7,7 @@
 <div id="head">
 	<div class="panel panel-default">
 		<div class="panel-heading">
-			<h2 class="panel-title">TC-UA-Steward</h2>
+			<h2 class="panel-title">{{.name}}</h2>
 		</div>
 
 		<table id="datatable" class="table table-striped table-hover">
@@ -41,7 +41,7 @@
 			loading: true,
 		},
 		mounted: function() {
-			this.$http.get('/api/v2/groups/heads').then(function(response) {
+			this.$http.get('/api/v2/groups/{{.suffix}}').then(function(response) {
 				this.heads = response.body;
 				this.loading = false;
 			})

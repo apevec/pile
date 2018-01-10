@@ -42,7 +42,7 @@ type Connection interface {
 	GetGroupsTiny(groups ...string) ([]*ldap.Entry, error)
 }
 
-func GetAll(ldapc Connection, head bool) (map[string]map[string]string, error) {
+func GetAll(ldapc Connection, heads bool) (map[string]map[string]string, error) {
 	var all = make(map[string]map[string]string)
 
 	roles, err := GetRoles(ldapc)
@@ -75,6 +75,15 @@ func GetAll(ldapc Connection, head bool) (map[string]map[string]string, error) {
 		}
 
 		for _, uid := range uids {
+
+			// we don't do work for All, when need Heads only
+			if heads == true {
+				if _, ok := mapPeopleRole[uid]; !ok {
+					// not a head, skip iteration
+					continue
+				}
+			}
+
 			if _, ok := all[uid]; !ok {
 				var info = make(map[string]string)
 				info["uid"] = uid
