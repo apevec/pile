@@ -49,7 +49,6 @@ func GetAll(ldapc Connection, heads bool) (map[string]map[string]string, error) 
 	if err != nil {
 		return all, err
 	}
-
 	var mapPeopleRole = make(map[string]string)
 	for _, role := range roles {
 		for _, uid := range role.Members {
@@ -69,7 +68,7 @@ func GetAll(ldapc Connection, heads bool) (map[string]map[string]string, error) 
 			return all, err
 		}
 
-		mapUIDName, err := GetPeople(ldapc, uids)
+		mapUIDName, mapUIDCostCenter, err := GetPeople(ldapc, uids)
 		if err != nil {
 			return all, err
 		}
@@ -86,9 +85,17 @@ func GetAll(ldapc Connection, heads bool) (map[string]map[string]string, error) 
 
 			if _, ok := all[uid]; !ok {
 				var info = make(map[string]string)
+
+				role := "Engineer"
+				if _, ok := mapPeopleRole[uid]; ok {
+					role = mapPeopleRole[uid]
+				}
+				cc := mapUIDCostCenter[uid]
+				getHumanReadableRole(&role, cc)
+
 				info["uid"] = uid
 				info["name"] = mapUIDName[uid]
-				info["role"] = mapPeopleRole[uid]
+				info["role"] = role
 				info["group"] = "tbd" // "tbd" is the hardcode to catch it later
 				all[uid] = info
 			}
@@ -154,7 +161,7 @@ func GetGroupMembersGeo(ldapc Connection, group string) ([]map[string]string, er
 	}
 	var membersgeo = make([]map[string]string, len(uids))
 
-	mapUIDName, err := GetPeople(ldapc, uids)
+	mapUIDName, _, err := GetPeople(ldapc, uids)
 	if err != nil {
 		log.Println(err)
 		return membersgeo, err
@@ -231,20 +238,11 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 		remote := isRemote(man)
 		co := getHumanReadableLocation(man)
 
-		// Logic for setting a proper role for a group member
-		// 1. Default role is "Engineer"
 		role := "Engineer"
-		// 2. Guess the role based on CC
-		switch cc {
-		case "667":
-			role = role + " (QE)"
-		case "105":
-			role = "Support Delivery"
-		}
-		// 3. Look for the role in special Role groups
 		if _, ok := mapPeopleRole[uid]; ok {
 			role = mapPeopleRole[uid]
 		}
+		getHumanReadableRole(&role, cc)
 
 		squad := ""
 		if _, ok := mapPeopleSquad[uid]; ok {
@@ -293,8 +291,10 @@ func GetGroupHead(ldapc Connection, group string) (map[string][]map[string]strin
 	var mapPeopleRole = make(map[string]string)
 	var mapPeopleName = make(map[string]string)
 	for _, role := range roles {
-		people, _ := GetPeople(ldapc, role.Members)
-		// TODO: handle error gracefully
+		people, _, err := GetPeople(ldapc, role.Members)
+		if err != nil {
+			return head, err
+		}
 
 		for uid, name := range people {
 			mapPeopleRole[uid] = role.Name
@@ -321,21 +321,24 @@ func GetGroupHead(ldapc Connection, group string) (map[string][]map[string]strin
 	return head, err
 }
 
-func GetPeople(ldapc Connection, uids []string) (map[string]string, error) {
+func GetPeople(ldapc Connection, uids []string) (map[string]string, map[string]string, error) {
 	var people = make(map[string]string)
+	var peoplecc = make(map[string]string)
 
 	ldapPeople, err := ldapc.GetPeopleTiny(uids)
 	if err != nil {
-		return people, err
+		return people, peoplecc, err
 	}
 	for _, ldapMan := range ldapPeople {
 		uid := ldapMan.GetAttributeValue("uid")
 		fullname := ldapMan.GetAttributeValue("cn")
+		cc := ldapMan.GetAttributeValue("rhatCostCenter")
 
 		people[uid] = fullname
+		peoplecc[uid] = cc
 	}
 
-	return people, err
+	return people, peoplecc, err
 }
 
 func GetRoles(ldapc Connection) (map[string]*role, error) {
@@ -492,6 +495,15 @@ func removeMe(xs *[]string) {
 			break
 		}
 	}
+}
+
+func getHumanReadableRole(role *string, cc string) {
+		switch cc {
+		case "667":
+			*role = *role + " [QE]"
+		case "105":
+			*role = "Support Delivery"
+		}
 }
 
 func getHumanReadableLocation(ldapEntry *ldap.Entry) string {
