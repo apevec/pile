@@ -498,12 +498,12 @@ func removeMe(xs *[]string) {
 }
 
 func getHumanReadableRole(role *string, cc string) {
-		switch cc {
-		case "667":
-			*role = *role + " [QE]"
-		case "105":
-			*role = "Support Delivery"
-		}
+	switch cc {
+	case "667":
+		*role = *role + " [QE]"
+	case "105":
+		*role = "Support Delivery"
+	}
 }
 
 func getHumanReadableLocation(ldapEntry *ldap.Entry) string {

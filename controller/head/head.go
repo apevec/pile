@@ -15,8 +15,8 @@ var (
 
 // Load the routes.
 func Load() {
-	router.Get(uri + "/head", IndexHead)
-	router.Get(uri + "/all", IndexAll)
+	router.Get(uri+"/head", IndexHead)
+	router.Get(uri+"/all", IndexAll)
 }
 
 // Index displays the items.

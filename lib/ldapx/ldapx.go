@@ -37,9 +37,9 @@ var (
 		"owner",        // []members owners
 	}
 	ldapAttrMemberTiny = []string{
-		"uid",             // uid
-		"cn",              // fullname
-		"rhatCostCenter",  // cost center
+		"uid",            // uid
+		"cn",             // fullname
+		"rhatCostCenter", // cost center
 	}
 	ldapAttrMemberFull = []string{
 		"uid",                // uid
