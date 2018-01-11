@@ -560,7 +560,7 @@ func decodeNote(note string) map[string]string {
 	// TODO: code below is fragile, very fragile
 	for i := range pile {
 		kv := strings.Split(pile[i][1], "=")
-		result[strings.Title(kv[0])] = kv[1]
+		result[strings.Title(kv[0])] = strings.Trim(kv[1], "\"")
 	}
 
 	return result
