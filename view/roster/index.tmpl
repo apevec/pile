@@ -61,6 +61,7 @@
 				<th>Component</th>
 				<th class="no-sort">IRC</th>
 				<th class="no-sort">External</th>
+				<th>Mobile Phone</th>
 				<th>Location</th>
 				<th class="no-sort">
 					<a @click="showMap()" style="cursor: pointer;"><i class="fa fa-map-o"></i> Time</a>
@@ -82,6 +83,7 @@
 						<!-- span v-if="name == 'Link'"><i class="fa fa-link" title="Link"> ${link} </i></span -->
 					</span>
 				</td>
+				<td>${member.Mobile}</td>
 				<td>${member.Country}</td>
 				<td>
 					<clock :uid="uid"></clock>

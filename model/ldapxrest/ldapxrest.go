@@ -25,6 +25,7 @@ type member struct {
 	Squad   string
 	Data    map[string]string
 	IRC     string
+	Mobile  string
 	Country string
 	CC      string
 	Remote  bool
@@ -233,6 +234,7 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 		name := man.GetAttributeValue("cn")
 		ircnick := man.GetAttributeValue("rhatNickName")
 		cc := man.GetAttributeValue("rhatCostCenter")
+		mobile := man.GetAttributeValue("mobile")
 
 		data := decodeNote(man.GetAttributeValue("rhatBio"))
 		remote := isRemote(man)
@@ -255,6 +257,7 @@ func GetGroupMembers(ldapc Connection, group string) (map[string]*member, error)
 			Squad:   squad,
 			Data:    data,
 			IRC:     ircnick,
+			Mobile:  mobile,
 			Country: co,
 			CC:      cc,
 			Remote:  remote,

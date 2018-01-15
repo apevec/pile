@@ -50,6 +50,7 @@ var (
 		"rhatCostCenter",     // cost center
 		"rhatLocation",       // location
 		"rhatOfficeLocation", // describes REMOTE
+		"mobile",             // mobile phone
 	}
 	ldapAttrMemberLocation = []string{
 		"uid",                // uid
