@@ -357,12 +357,7 @@ func GetRoles(ldapc Connection) (map[string]*role, error) {
 		roleName := ldapRole.GetAttributeValue("description")
 
 		roleMembers := cleanUids(ldapRole.GetAttributeValues("uniqueMember"))
-		roleMembers = append(roleMembers, cleanUids(ldapRole.GetAttributeValues("owner"))...)
 
-		// TODO: find a better way for exclusions
-		if roleID != "rhos-steward" {
-			removeMe(&roleMembers)
-		}
 		roles[roleID] = &role{
 			Name:    roleName,
 			Members: roleMembers,
@@ -380,7 +375,6 @@ func GetGroupMembersSlice(ldapc Connection, group string) ([]string, error) {
 		return members, err
 	}
 	groupMembers := cleanUids(ldapGroupMembers.GetAttributeValues("uniqueMember"))
-	groupMembers = append(groupMembers, cleanUids(ldapGroupMembers.GetAttributeValues("owner"))...)
 
 	squads, err := GetSquads(ldapc, group)
 	if err != nil {
@@ -393,16 +387,11 @@ func GetGroupMembersSlice(ldapc Connection, group string) ([]string, error) {
 		}
 
 		squadMembers := cleanUids(ldapSquadMembers.GetAttributeValues("uniqueMember"))
-		squadMembers = append(squadMembers, cleanUids(ldapSquadMembers.GetAttributeValues("owner"))...)
 		groupMembers = append(groupMembers, squadMembers...)
 	}
 
 	removeDuplicates(&groupMembers)
 
-	// TODO: find a better way for exclusion
-	if (group != "rhos-dfg-cloud-applications") && (group != "rhos-dfg-portfolio-integration") {
-		removeMe(&groupMembers)
-	}
 	members = groupMembers
 
 	return members, err
@@ -488,16 +477,6 @@ func removeDuplicates(xs *[]string) {
 		}
 	}
 	*xs = (*xs)[:j]
-}
-
-func removeMe(xs *[]string) {
-	// TODO: temporary, remove aarapov
-	for i, me := range *xs {
-		if me == "aarapov" {
-			(*xs) = append((*xs)[:i], (*xs)[i+1:]...)
-			break
-		}
-	}
 }
 
 func getHumanReadableRole(role *string, cc string) {

@@ -28,13 +28,11 @@ var (
 		"cn",           // group id
 		"description",  // description
 		"uniqueMember", // []members
-		"owner",        // []members owners
 	}
 	ldapAttrRoles = []string{
 		"cn",           // roles id
 		"description",  // description
 		"uniqueMember", // []members
-		"owner",        // []members owners
 	}
 	ldapAttrMemberTiny = []string{
 		"uid",            // uid
