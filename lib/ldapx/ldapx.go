@@ -63,6 +63,7 @@ var (
 		"rhos-steward":    "Steward",
 		"rhos-ua":         "User Advocate",
 		"rhos-tc":         "Team Catalyst",
+		"rhos-qea":        "QE Advocate",
 		"rhos-squad-lead": "Squad Lead",
 	}
 )
@@ -172,7 +173,7 @@ func (c *Conn) getRoles(roles ...string) ([]*ldap.Entry, error) {
 	var filter string
 
 	// "(&(objectClass=rhatGroup)(|(cn=rhos-role1)(cn=rhos-role2)))"
-	filter = "(&(objectClass=rhatGroup)(|"
+	filter = "(&(objectClass=rhatRoverGroup)(|"
 	for ldapRoleGroup := range ldapRolesMap {
 		filter = filter + fmt.Sprintf("(cn=%s)", ldapRoleGroup)
 	}
