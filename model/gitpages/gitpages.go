@@ -19,6 +19,7 @@ var (
 	giturl  = os.Getenv("GIT")
 	gitdir  = os.Getenv("GIT_DIR")
 	gitusr  = os.Getenv("GIT_USER")
+	gitssh  = os.Getenv("GIT_SSH")
 	gitpage = "home.md"
 )
 
@@ -69,7 +70,7 @@ func Update(page string, change string) error {
 }
 
 func push() error {
-	sshAuth, err := ssh.NewPublicKeysFromFile(gitusr, "/secrets/.ssh/id_rsa", "")
+	sshAuth, err := ssh.NewPublicKeysFromFile(gitusr, gitssh, "")
 	if err != nil {
 		log.Println(err)
 	}
@@ -134,7 +135,7 @@ func commit(change string) error {
 
 func clone() error {
 	// Clone a repo, just a first shot... we may want to keep the data in memory instead
-	sshAuth, err := ssh.NewPublicKeysFromFile(gitusr, "/secrets/.ssh/id_rsa", "")
+	sshAuth, err := ssh.NewPublicKeysFromFile(gitusr, gitssh, "")
 	if err != nil {
 		log.Println(err)
 	}
