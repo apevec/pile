@@ -37,6 +37,7 @@ var (
 	ldapAttrMemberTiny = []string{
 		"uid",            // uid
 		"cn",             // fullname
+		"rhatNickName",   // irc nick
 		"rhatCostCenter", // cost center
 	}
 	ldapAttrMemberFull = []string{
