@@ -16,6 +16,7 @@
 					<th>DFG</th>
 					<th>Role</th>
 					<th>Name</th>
+					<th>IRC nick</th>
 					<th>Email</th>
 				</tr>
 			</thead>
@@ -25,6 +26,7 @@
 					<td><a :href="'/roster/' + head.group">${head.groupName}</a></td>
 					<td>${head.role}</td>
 					<td><a :href="'https://rover.redhat.com/people/profile/' + head.uid + '/'">${head.name}</a></td>
+					<td>${head.nick}</td>
 					<td>${head.uid}@redhat.com</td>
 				</tr>
 			</tbody>

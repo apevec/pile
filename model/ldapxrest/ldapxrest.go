@@ -69,7 +69,7 @@ func GetAll(ldapc Connection, heads bool) (map[string]map[string]string, error) 
 			return all, err
 		}
 
-		mapUIDName, mapUIDCostCenter, err := GetPeople(ldapc, uids)
+		mapUIDName, mapUIDCostCenter, mapNickName, err := GetPeople(ldapc, uids)
 		if err != nil {
 			return all, err
 		}
@@ -96,6 +96,7 @@ func GetAll(ldapc Connection, heads bool) (map[string]map[string]string, error) 
 
 				info["uid"] = uid
 				info["name"] = mapUIDName[uid]
+				info["nick"] = mapNickName[uid]
 				info["role"] = role
 				info["group"] = "tbd" // "tbd" is the hardcode to catch it later
 				all[uid] = info
@@ -162,7 +163,7 @@ func GetGroupMembersGeo(ldapc Connection, group string) ([]map[string]string, er
 	}
 	var membersgeo = make([]map[string]string, len(uids))
 
-	mapUIDName, _, err := GetPeople(ldapc, uids)
+	mapUIDName, _, _, err := GetPeople(ldapc, uids)
 	if err != nil {
 		log.Println(err)
 		return membersgeo, err
@@ -285,7 +286,7 @@ func GetGroupHead(ldapc Connection, group string) (map[string][]map[string]strin
 	var mapPeopleRole = make(map[string]string)
 	var mapPeopleName = make(map[string]string)
 	for _, role := range roles {
-		people, _, err := GetPeople(ldapc, role.Members)
+		people, _, _, err := GetPeople(ldapc, role.Members)
 		if err != nil {
 			return head, err
 		}
@@ -315,24 +316,27 @@ func GetGroupHead(ldapc Connection, group string) (map[string][]map[string]strin
 	return head, err
 }
 
-func GetPeople(ldapc Connection, uids []string) (map[string]string, map[string]string, error) {
+func GetPeople(ldapc Connection, uids []string) (map[string]string, map[string]string, map[string]string, error) {
 	var people = make(map[string]string)
 	var peoplecc = make(map[string]string)
+	var peopleirc = make(map[string]string)
 
 	ldapPeople, err := ldapc.GetPeopleTiny(uids)
 	if err != nil {
-		return people, peoplecc, err
+		return people, peoplecc, peopleirc, err
 	}
 	for _, ldapMan := range ldapPeople {
 		uid := ldapMan.GetAttributeValue("uid")
 		fullname := ldapMan.GetAttributeValue("cn")
 		cc := ldapMan.GetAttributeValue("rhatCostCenter")
+		nickname := ldapMan.GetAttributeValue("rhatNickName")
 
 		people[uid] = fullname
 		peoplecc[uid] = cc
+		peopleirc[uid] = nickname
 	}
 
-	return people, peoplecc, err
+	return people, peoplecc, peopleirc, err
 }
 
 func GetRoles(ldapc Connection) (map[string]*role, error) {
