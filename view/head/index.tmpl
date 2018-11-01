@@ -21,7 +21,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-if="loading"><td colspan="4" bgcolor="orange"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
+				<tr v-if="loading"><td colspan="5" bgcolor="orange"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
 				<tr v-for="head in heads">
 					<td><a :href="'/roster/' + head.group">${head.groupName}</a></td>
 					<td>${head.role}</td>
