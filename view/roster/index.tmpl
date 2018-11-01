@@ -123,7 +123,7 @@
 					</div>
 				</div>
 				<div class="col-md-5">
-					<div v-for="(role, id) in groupinfo.Head" v-if="id == 'User Advocate' || id == 'Team Catalyst' || id == 'Squad Lead'">
+					<div v-for="(role, id) in groupinfo.Head" v-if="id == 'User Advocate' || id == 'QE Advocate' || id == 'Team Catalyst' || id == 'Squad Lead'">
 						<strong>${id}<span v-if="role.length > 1">s</span>:</strong>
 						<a v-for="man in role" :href="'https://rover.redhat.com/people/profile/' + man.ID + '/'"> ${man.Name}</a>
 					</div>
