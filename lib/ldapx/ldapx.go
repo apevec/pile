@@ -60,12 +60,12 @@ var (
 
 	// ldapRolesMap - keys are the role groups in ldap
 	ldapRolesMap = map[string]string{
-		"rhos-pm":         "Product Management",
-		"rhos-steward":    "Steward",
-		"rhos-ua":         "User Advocate",
-		"rhos-tc":         "Team Catalyst",
-		"rhos-qea":        "QE Advocate",
-		"rhos-squad-lead": "Squad Lead",
+		"rhos-role-pm":      "Product Management",
+		"rhos-role-steward": "Steward",
+		"rhos-role-ua":      "User Advocate",
+		"rhos-role-tc":      "Team Catalyst",
+		"rhos-role-qea":     "QE Advocate",
+		"rhos-role-slead":   "Squad Lead",
 	}
 )
 
