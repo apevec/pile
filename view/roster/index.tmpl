@@ -110,10 +110,26 @@
 			<div class="row">
 				<div class="col-md-2">
 					<div v-for="(link, name) in groupinfo.Links" v-if="name != 'Attr'">
-						<i v-if="name == 'Backlog'" class="fa fa-tasks"></i>
-						<i v-else-if="name == 'Mission'" class="fa fa-bullseye"></i>
-						<i v-else class="fa fa-link"></i>
-						<a :href="link">${name}</a>
+						<span v-if="name == 'Backlog'">
+							<i class="fa fa-tasks"></i>
+							<a :href="link">${name}</a>
+						</span>
+						<span v-else-if="name == 'Mission'">
+							<i class="fa fa-bullseye"></i>
+							<a :href="link">${name}</a>
+						</span>
+						<span v-else-if="name == 'Mail'">
+							<i class="fa fa-envelope"></i>
+							<a :href="'mailto:' + link" :title="link">Mailing list</a>
+						</span>
+						<span v-else-if="name == 'Irc'">
+							<i class="fa fa-hashtag"></i>
+							<a :href="'irc://irc.devel.redhat.com/#' + link" :title="'irc://irc.devel.redhat.com/#' + link">${link}</a>
+						</span>
+						<span v-else>
+							<i class="fa fa-link"></i>
+							<a :href="link">${name}</a>
+						</span>
 					</div>
 				</div>
 				<div class="col-md-5">
