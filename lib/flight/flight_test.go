@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/arapov/pile/lib/env"
-	"github.com/arapov/pile/lib/flight"
+	"github.com/apevec/pile/lib/env"
+	"github.com/apevec/pile/lib/flight"
 )
 
 // TestRace tests for race conditions.

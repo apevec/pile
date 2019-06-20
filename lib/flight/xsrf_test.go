@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/arapov/pile/lib/flight"
+	"github.com/apevec/pile/lib/flight"
 	"github.com/blue-jay/core/xsrf"
 )
 

@@ -2,13 +2,13 @@
 package controller
 
 import (
-	"github.com/arapov/pile/controller/about"
-	"github.com/arapov/pile/controller/head"
-	"github.com/arapov/pile/controller/home"
-	"github.com/arapov/pile/controller/ldapxrest"
-	"github.com/arapov/pile/controller/roster"
-	"github.com/arapov/pile/controller/static"
-	"github.com/arapov/pile/controller/status"
+	"github.com/apevec/pile/controller/about"
+	"github.com/apevec/pile/controller/head"
+	"github.com/apevec/pile/controller/home"
+	"github.com/apevec/pile/controller/ldapxrest"
+	"github.com/apevec/pile/controller/roster"
+	"github.com/apevec/pile/controller/static"
+	"github.com/apevec/pile/controller/status"
 )
 
 // LoadRoutes loads the routes for each of the controllers.

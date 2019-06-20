@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/arapov/pile/lib/env"
-	"github.com/arapov/pile/lib/ldapx"
+	"github.com/apevec/pile/lib/env"
+	"github.com/apevec/pile/lib/ldapx"
 
 	"github.com/blue-jay/core/flash"
 	"github.com/blue-jay/core/form"

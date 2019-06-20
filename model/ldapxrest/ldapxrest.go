@@ -447,7 +447,7 @@ func GetGroups(ldapc Connection, groups ...string) (map[string]string, error) {
 }
 
 func Ping(ldapc Connection) (map[string]string, error) {
-	ldapMe, err := ldapc.GetPeopleTiny([]string{"aarapov"})
+	ldapMe, err := ldapc.GetPeopleTiny([]string{"apevec"})
 	if err != nil {
 		return nil, err
 	}

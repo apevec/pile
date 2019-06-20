@@ -4,8 +4,8 @@ package home
 import (
 	"net/http"
 
-	"github.com/arapov/pile/lib/flight"
-	"github.com/arapov/pile/model/gitpages"
+	"github.com/apevec/pile/lib/flight"
+	"github.com/apevec/pile/model/gitpages"
 
 	"github.com/blue-jay/core/router"
 )
